@@ -1,0 +1,14 @@
+{
+    "name": "rayan/crm",
+    "description": "Custom CRM and Business Management System",
+    "type": "project",
+    "require": {
+        "phpoffice/phpspreadsheet": "^4.4"
+    },
+    "authors": [
+        {
+            "name": "Your Name",
+            "email": "you@example.com"
+        }
+    ]
+}

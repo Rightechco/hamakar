@@ -1,0 +1,265 @@
+<?php
+// app/views/admin/inventory/purchases/create.php
+global $auth;
+$products = $products ?? [];
+$vendors = $vendors ?? [];
+?>
+
+<style>
+    .invoice-preview-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        background-color: #fff;
+    }
+    .invoice-header {
+        border-bottom: 2px solid #34495e;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .invoice-title {
+        font-family: 'B Homa', 'Tahoma', sans-serif;
+        font-weight: bold;
+        color: #34495e;
+    }
+    .invoice-logo {
+        max-width: 150px;
+        height: auto;
+    }
+    .invoice-table th, .invoice-table td {
+        border-color: #e0e0e0;
+        vertical-align: middle;
+        text-align: center;
+        font-size: 14px;
+        padding: 8px;
+    }
+    .invoice-total-row td {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+    .text-sm {
+        font-size: 12px;
+    }
+    /* Dynamic form styles */
+    #purchase-items-container .row {
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #eee;
+    }
+</style>
+
+<h1 class="mb-4">ثبت خرید جدید</h1>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white p-3">
+                <h5 class="mb-0">فرم فاکتور خرید</h5>
+            </div>
+            <div class="card-body">
+                <?php 
+                $message = FlashMessage::get('message');
+                if (is_array($message)) {
+                    // If the message is an array, implode its elements
+                    echo implode(' ', $message);
+                } else {
+                    // Otherwise, echo the message as a string
+                    echo $message;
+                }
+                ?>
+                <form id="purchase-form" action="<?php echo APP_URL; ?>/index.php?page=purchases&action=store" method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="vendor_id" class="form-label">فروشنده</label>
+                            <select class="form-select" id="vendor_id" name="vendor_id" required>
+                                <option value="">انتخاب کنید...</option>
+                                <?php foreach ($vendors as $vendor): ?>
+                                    <option value="<?php echo $vendor->id; ?>"><?php echo htmlspecialchars($vendor->name); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="purchase_date" class="form-label">تاریخ خرید</label>
+                            <input type="text" class="form-control" id="purchase_date" name="purchase_date" placeholder="YYYY/MM/DD" required>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h5>اقلام خرید</h5>
+                    <div id="purchase-items-container">
+                        </div>
+                    
+                    <button type="button" id="add-item-btn" class="btn btn-info btn-sm mt-3"><i class="fas fa-plus"></i> افزودن کالا</button>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <label for="vat_rate" class="form-label">نرخ مالیات بر ارزش افزوده (%)</label>
+                            <input type="number" class="form-control" id="vat_rate" name="vat_rate" value="9" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="text-start mt-4">
+                        <button type="submit" class="btn btn-success">ثبت فاکتور خرید</button>
+                        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=index" class="btn btn-secondary">بازگشت</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="invoice-preview-container shadow-sm p-4">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped invoice-table">
+                    <thead>
+                        <tr>
+                            <th>شرح کالا</th>
+                            <th>تعداد</th>
+                            <th>واحد</th>
+                            <th>قیمت واحد</th>
+                            <th>قیمت کل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-items-body">
+                        </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end">جمع جزء:</td>
+                            <td id="preview-subtotal-amount">0</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end">مالیات بر ارزش افزوده:</td>
+                            <td id="preview-vat-amount">0</td>
+                        </tr>
+                        <tr class="invoice-total-row">
+                            <td colspan="4" class="text-end">جمع کل فاکتور:</td>
+                            <td id="preview-total-amount">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemsContainer = document.getElementById('purchase-items-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const purchaseForm = document.getElementById('purchase-form');
+        const vendorsSelect = document.getElementById('vendor_id');
+        const vatRateInput = document.getElementById('vat_rate'); // ✅ فیلد نرخ مالیات
+
+        const previewVendorName = document.getElementById('preview-vendor-name');
+        const previewPurchaseDate = document.getElementById('preview-purchase-date');
+        const previewItemsBody = document.getElementById('preview-items-body');
+        const previewSubtotalAmount = document.getElementById('preview-subtotal-amount');
+        const previewVatAmount = document.getElementById('preview-vat-amount');
+        const previewTotalAmount = document.getElementById('preview-total-amount');
+
+        let itemIndex = 0;
+
+        const updateInvoicePreview = () => {
+            let subtotal = 0;
+            let previewHtml = '';
+            document.querySelectorAll('.purchase-item-row').forEach(row => {
+                const productName = row.querySelector('.product-select option:checked').textContent;
+                const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                const unitPrice = parseFloat(row.querySelector('.price-input').value) || 0;
+                const totalPrice = quantity * unitPrice;
+                subtotal += totalPrice;
+                if (productName && quantity > 0 && unitPrice > 0) {
+                     previewHtml += `
+                        <tr>
+                            <td>${productName}</td>
+                            <td>${quantity}</td>
+                            <td>---</td>
+                            <td>${new Intl.NumberFormat().format(unitPrice)}</td>
+                            <td>${new Intl.NumberFormat().format(totalPrice)}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            const vatRate = parseFloat(vatRateInput.value) || 0;
+            const vatAmount = (subtotal * vatRate) / 100;
+            const totalAmount = subtotal + vatAmount;
+
+            previewItemsBody.innerHTML = previewHtml;
+            previewSubtotalAmount.textContent = new Intl.NumberFormat().format(subtotal);
+            previewVatAmount.textContent = new Intl.NumberFormat().format(vatAmount);
+            previewTotalAmount.textContent = new Intl.NumberFormat().format(totalAmount);
+        };
+
+        const createItemRow = () => {
+            const products = <?php echo json_encode($products); ?>;
+            const newRow = document.createElement('div');
+            newRow.classList.add('row', 'mb-3', 'align-items-center', 'purchase-item-row');
+            newRow.innerHTML = `
+                <div class="col-md-5">
+                    <label class="form-label text-sm">کالا</label>
+                    <select class="form-select form-select-sm product-select" name="items[${itemIndex}][product_id]" required>
+                        <option value="">انتخاب کنید...</option>
+                        ${products.map(p => `<option value="${p.id}" data-price="${p.purchase_price}">${p.name} (${p.sku})</option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-sm">تعداد</label>
+                    <input type="number" class="form-control form-control-sm quantity-input" name="items[${itemIndex}][quantity]" value="1" min="1" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-sm">قیمت واحد</label>
+                    <input type="number" class="form-control form-control-sm price-input" name="items[${itemIndex}][price]" required min="0">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm remove-item-btn"><i class="fas fa-times"></i> حذف</button>
+                </div>
+            `;
+            itemsContainer.appendChild(newRow);
+            itemIndex++;
+
+            const productSelect = newRow.querySelector('.product-select');
+            const priceInput = newRow.querySelector('.price-input');
+            const quantityInput = newRow.querySelector('.quantity-input');
+
+            productSelect.addEventListener('change', (e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                priceInput.value = selectedOption.dataset.price;
+                updateInvoicePreview();
+            });
+
+            priceInput.addEventListener('input', updateInvoicePreview);
+            quantityInput.addEventListener('input', updateInvoicePreview);
+            vatRateInput.addEventListener('input', updateInvoicePreview);
+            
+            updateInvoicePreview();
+        };
+
+        addItemBtn.addEventListener('click', createItemRow);
+        
+        itemsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-item-btn')) {
+                e.target.closest('.purchase-item-row').remove();
+                updateInvoicePreview();
+            }
+        });
+
+        createItemRow();
+
+        vendorsSelect.addEventListener('change', () => {
+            const selectedOption = vendorsSelect.options[vendorsSelect.selectedIndex];
+            previewVendorName.textContent = selectedOption.textContent;
+        });
+
+        $('#purchase_date').persianDatepicker({
+            format: 'YYYY/MM/DD',
+            onSelect: function(date) {
+                previewPurchaseDate.textContent = date.format('YYYY/MM/DD');
+            }
+        });
+        
+        previewVendorName.textContent = vendorsSelect.options[vendorsSelect.selectedIndex].textContent;
+        previewPurchaseDate.textContent = $('#purchase_date').val() || '---';
+    });
+</script>

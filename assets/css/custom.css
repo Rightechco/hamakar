@@ -1,0 +1,507 @@
+/* public/assets/css/custom.css */
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+/* --- Import Vazirmatn Font --- */
+/* مطمئن شوید که فایل های فونت در مسیر public_html/assets/fonts/ آپلود شده باشند */
+
+/* --- Import Yekan Font from CDN --- */
+@import url('http://cdn.font-store.ir/yekan.css');
+
+/* --- Global Variables (Color Palette, Typography, Shadows) --- */
+:root {
+    --primary-color: #5A67D8; /* Deep Blue-Violet for main accents */
+    --primary-light: #8DA0F5;
+    --primary-dark: #434B8E;
+
+    --secondary-color: #6B7280; /* Soft Gray for secondary elements */
+    --secondary-light: #D1D5DB;
+    --secondary-dark: #374151;
+
+    --accent-success: #10B981;
+    --accent-danger: #EF4444;
+    --accent-warning: #F59E0B;
+    --accent-info: #3B82F6;
+
+    --bg-light: #F9FAFB;
+    --bg-white: #FFFFFF;
+    --text-dark: #1F2937;
+    --text-light: #6B7280;
+    --border-color: #E5E7EB;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.5rem;
+    --border-radius-lg: 0.75rem;
+    
+    --font-primary: 'Vazirmatn', sans-serif; /* تغییر به Vazirmatn */
+    --font-heading: 'Vazirmatn', sans-serif; /* تغییر به Vazirmatn */
+
+}
+
+/* --- Base Body & Typography --- */
+body {
+    font-family: var(--font-primary);
+    color: var(--text-dark);
+    background-color: var(--bg-light);
+    direction: rtl;
+    text-align: right;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+/* Vazirmatn Thin */
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Thin.woff2') format('woff2'),
+         url('../fonts/Vazirmatn-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Vazirmatn Light */
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Light.woff2') format('woff2'),
+         url('../fonts/Vazirmatn-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Vazirmatn Regular */
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Regular.woff2') format('woff2'),
+         url('../fonts/Vazirmatn-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Vazirmatn Medium */
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Medium.woff2') format('woff2'),
+         url('../fonts/Vazirmatn-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Vazirmatn Bold */
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Bold.woff2') format('woff2'),
+         url('../fonts/Vazirmatn-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Vazirmatn Black */
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Black.woff2') format('woff2'),
+         url('../fonts/Vazirmatn-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+/* --- Global Variables (Color Palette, Typography, Shadows) --- */
+:root {
+    --primary-color: #5A67D8; /* Deep Blue-Violet for main accents */
+    --primary-light: #8DA0F5;
+    --primary-dark: #434B8E;
+
+    --secondary-color: #6B7280; /* Soft Gray for secondary elements */
+    --secondary-light: #D1D5DB;
+    --secondary-dark: #374151;
+
+    --accent-success: #10B981; /* Vibrant Green for success/positive actions */
+    --accent-danger: #EF4444; /* Strong Red for danger/errors */
+    --accent-warning: #F59E0B; /* Orange for warnings */
+    --accent-info: #3B82F6; /* Blue for info */
+
+    --bg-light: #F9FAFB; /* Very light gray background */
+    --bg-white: #FFFFFF; /* Pure white for cards/elements */
+    --text-dark: #1F2937; /* Dark gray for main text */
+    --text-light: #6B7280; /* Lighter gray for secondary text */
+    --border-color: #E5E7EB; /* Light gray for borders */
+
+    --font-primary: 'Vazirmatn', sans-serif;
+    --font-heading: 'Vazirmatn', sans-serif; /* You can use a different font if preferred for headings */
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    --border-radius-sm: 0.375rem; /* 6px */
+    --border-radius-md: 0.5rem;   /* 8px */
+    --border-radius-lg: 0.75rem;  /* 12px */
+}
+
+/* --- Base Body & Typography --- */
+body {
+    font-family: var(--font-primary);
+    color: var(--text-dark);
+    background-color: var(--bg-light);
+    direction: rtl;
+    text-align: right;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--text-dark);
+    font-weight: 700; /* Bold headings */
+    margin-bottom: 1.5rem;
+}
+
+p {
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* --- Layout & Structure --- */
+.main-content { /* از #main-content به .main-content تغییر داده شد در آخرین کد */
+    margin-right: 280px; /* Adjust for wider sidebar */
+    padding: 2.5rem; /* More generous padding */
+    transition: margin-right 0.3s ease-in-out;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        margin-right: -280px; /* Hide by default on mobile */
+    }
+    #main-content {
+        margin-right: 0;
+        padding: 1.5rem;
+    }
+    /* Add active class for JS toggling */
+    .sidebar.active {
+        margin-right: 0;
+    }
+    #main-content.sidebar-active {
+        margin-right: 280px; /* Push content when sidebar is open */
+    }
+}
+
+/* --- Components --- */
+
+/* Navbar */
+.navbar {
+    background-color: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 2rem;
+    z-index: 999; /* Ensure it's above content but below sidebar on toggle */
+}
+.navbar-brand {
+    font-weight: 900; /* Black font for brand */
+    color: var(--primary-dark) !important;
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+}
+.navbar-brand i {
+    margin-left: 10px;
+    color: var(--primary-color);
+}
+.navbar-nav .nav-link {
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: .75rem 1rem;
+    transition: all 0.2s ease-in-out;
+}
+.navbar-nav .nav-link:hover {
+    color: var(--primary-color);
+    background-color: var(--bg-light);
+    border-radius: var(--border-radius-sm);
+}
+.dropdown-menu {
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    margin-top: .5rem;
+}
+.dropdown-item {
+    padding: .6rem 1.25rem;
+    transition: background-color 0.2s ease-in-out;
+}
+.dropdown-item:hover {
+    background-color: var(--bg-light);
+    color: var(--primary-color);
+}
+
+/* Sidebar */
+.sidebar {
+    background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-color) 100%); /* Gradient background */
+    color: #ffffff;
+    height: 100vh;
+    padding-top: 1.5rem;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 280px; /* Slightly wider */
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    z-index: 1001; /* Above navbar for mobile toggle */
+    border-top-left-radius: var(--border-radius-lg);
+    border-bottom-left-radius: var(--border-radius-lg);
+}
+.sidebar .sidebar-heading {
+    font-size: .9rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 1rem 1.5rem;
+    margin-top: 1.5rem;
+    font-weight: 700;
+}
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    padding: .85rem 1.75rem; /* More padding */
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease-in-out;
+    border-radius: var(--border-radius-sm);
+    margin: 0.25rem 1rem; /* Spacing between menu items */
+}
+.sidebar .nav-link i {
+    margin-left: 12px; /* More space for icon in RTL */
+    font-size: 1.1rem;
+}
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.15); /* Lighter hover */
+    color: #ffffff;
+}
+.sidebar .nav-link.active {
+    background-color: var(--primary-light); /* Active state */
+    color: var(--text-dark); /* Darker text for active item for contrast */
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Cards */
+.card {
+    border: 1px solid var(--border-color); /* Subtle border */
+    border-radius: var(--border-radius-lg); /* More rounded corners */
+    box-shadow: var(--shadow-md); /* More prominent shadow */
+    margin-bottom: 2rem; /* More spacing */
+    background-color: var(--bg-white);
+}
+.card-header {
+    background-color: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 1.25rem 1.5rem; /* More padding */
+    font-size: 1.1rem;
+    color: var(--heading-color);
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
+}
+.card-body {
+    padding: 1.5rem; /* More padding */
+}
+
+/* Forms */
+.form-control {
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem; /* More comfortable padding */
+    color: var(--text-dark);
+}
+.form-control:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 .25rem rgba(90, 103, 216, 0.2); /* Shadow with primary color */
+}
+.form-label {
+    color: var(--text-dark);
+    font-weight: 500;
+    margin-bottom: .5rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius-md);
+    font-weight: 600;
+    padding: .75rem 1.5rem; /* More generous button padding */
+    transition: all 0.2s ease-in-out;
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-1px); /* Slight lift on hover */
+    box-shadow: var(--shadow-sm);
+}
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+.btn-secondary:hover {
+    background-color: var(--secondary-dark);
+    border-color: var(--secondary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Buttons for actions in tables/cards */
+.btn-sm {
+    padding: .4rem .8rem;
+    font-size: .875rem;
+    border-radius: var(--border-radius-sm);
+}
+.btn-info {
+    background-color: var(--accent-info);
+    border-color: var(--accent-info);
+}
+.btn-info:hover {
+    background-color: darken(var(--accent-info), 10%);
+    border-color: darken(var(--accent-info), 10%);
+}
+.btn-danger {
+    background-color: var(--accent-danger);
+    border-color: var(--accent-danger);
+}
+.btn-danger:hover {
+    background-color: darken(var(--accent-danger), 10%);
+    border-color: darken(var(--accent-danger), 10%);
+}
+
+/* Alerts */
+.alert {
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    padding: 1rem 1.5rem;
+    border-width: 1px; /* Explicit border */
+}
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.1); /* Light green background */
+    color: var(--accent-success);
+    border-color: var(--accent-success);
+}
+.alert-danger {
+    background-color: rgba(239, 68, 68, 0.1); /* Light red background */
+    color: var(--accent-danger);
+    border-color: var(--accent-danger);
+}
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.1); /* Light orange background */
+    color: var(--accent-warning);
+    border-color: var(--accent-warning);
+}
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.1); /* Light blue background */
+    color: var(--accent-info);
+    border-color: var(--accent-info);
+}
+
+/* Tables */
+.table {
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color); /* Add a border to the table */
+}
+.table thead th {
+    background-color: var(--primary-color); /* Primary color header */
+    color: #fff;
+    border-bottom: none;
+    padding: 1rem 1.25rem; /* More padding */
+    font-weight: 600;
+}
+.table tbody td {
+    padding: 1rem 1.25rem; /* Consistent padding */
+    color: var(--text-dark);
+    vertical-align: middle; /* Align content vertically */
+}
+.table tbody tr:hover {
+    background-color: var(--bg-light); /* Lighter hover background */
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0,0,0,.02); /* Very subtle stripe */
+}
+.badge {
+    padding: .4em .7em;
+    border-radius: .25rem;
+    font-weight: 600;
+    font-size: .8em;
+}
+.badge.bg-admin { background-color: var(--accent-danger); color: white; }
+.badge.bg-employee { background-color: var(--accent-info); color: white; }
+.badge.bg-client { background-color: var(--secondary-color); color: white; }
+.badge.bg-active { background-color: var(--accent-success); color: white; }
+.badge.bg-inactive { background-color: var(--accent-warning); color: white; }
+.badge.bg-pending { background-color: var(--accent-warning); color: white; }
+.badge.bg-paid { background-color: var(--accent-success); color: white; }
+.badge.bg-overdue { background-color: var(--accent-danger); color: white; }
+.badge.bg-in_progress { background-color: var(--accent-info); color: white; }
+.badge.bg-completed { background-color: var(--accent-success); color: white; }
+.badge.bg-canceled { background-color: var(--secondary-color); color: white; }
+
+
+/* Modals */
+.modal-content {
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: none; /* Remove default border */
+}
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
+}
+.modal-title {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.modal-body {
+    padding: 1.5rem;
+}
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem;
+}
+
+
+/* Font Awesome Icon Spacing (RTL) */
+.sidebar .nav-link i,
+.card-header i,
+.navbar-brand i {
+    margin-left: 0.5rem; /* Space between icon and text in RTL */
+    margin-right: 0;
+}
+
+/* Custom Utilities */
+.text-primary-custom { color: var(--primary-color) !important; }
+.bg-light-custom { background-color: var(--bg-light) !important; }
