@@ -139,4 +139,49 @@ class Purchase {
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
+public function deletePurchase($id) {
+        try {
+            $this->db->beginTransaction();
+
+            // ۱. دریافت آیتم‌های فاکتور خرید قبل از حذف
+            $this->db->query("SELECT * FROM purchase_items WHERE purchase_id = :id");
+            $this->db->bind(':id', $id);
+            $items = $this->db->fetchAll();
+
+            // ۲. کسر کالاها از انبار (Rollback موجودی)
+            foreach ($items as $item) {
+                // ثبت لاگ خروجی از انبار بابت ابطال فاکتور خرید
+                $this->db->query("INSERT INTO inventory_logs (warehouse_id, product_id, quantity, log_type, source_id, source_type, user_id) 
+                                  VALUES (:warehouse_id, :product_id, :quantity, 'out', :source_id, 'purchase', :user_id)");
+                $this->db->bind(':warehouse_id', $item->warehouse_id ?? 1);
+                $this->db->bind(':product_id', $item->product_id);
+                $this->db->bind(':quantity', $item->quantity);
+                $this->db->bind(':source_id', $id);
+                $this->db->bind(':user_id', $_SESSION['user_id'] ?? 1);
+                $this->db->execute();
+            }
+
+            // ۳. حذف اسناد حسابداری مربوط به این فاکتور خرید
+            $this->db->query("DELETE FROM journal_vouchers WHERE description LIKE :desc");
+            $this->db->bind(':desc', '%فاکتور شماره ' . $id . '%');
+            $this->db->execute();
+
+            // ۴. حذف آیتم‌های فاکتور خرید
+            $this->db->query("DELETE FROM purchase_items WHERE purchase_id = :id");
+            $this->db->bind(':id', $id);
+            $this->db->execute();
+
+            // ۵. حذف رکورد اصلی فاکتور خرید
+            $this->db->query("DELETE FROM purchases WHERE id = :id");
+            $this->db->bind(':id', $id);
+            $result = $this->db->execute();
+
+            $this->db->commit();
+            return $result;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error deleting purchase " . $id . ": " . $e->getMessage());
+            return false;
+        }
+    }
 }

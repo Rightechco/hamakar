@@ -228,4 +228,19 @@ class SalesController {
         }
         return $cogs;
     }
+    public function delete($id) {
+    $this->auth->restrict(['admin', 'accountant']);
+
+    if (!empty($id)) {
+        $saleId = sanitize($id);
+
+        if ($this->saleModel->deleteSale($saleId)) {
+            FlashMessage::set('message', "فاکتور فروش شماره #{$saleId} با موفقیت حذف گردید و موجودی کالاها به انبار بازگشت داده شد.");
+        } else {
+            FlashMessage::set('message', "خطا در حذف فاکتور فروش شماره #{$saleId}.", 'error');
+        }
+    }
+
+    redirect(APP_URL . '/index.php?page=sales&action=index');
+}
 }

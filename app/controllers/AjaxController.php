@@ -105,5 +105,58 @@ class AjaxController {
 
         echo json_encode(['words' => $words . ' ریال']);
     }
+// در فایل app/controllers/AjaxController.php
 
+// app/controllers/AjaxController.php
+
+// ۱. تایید لایسنس اپلیکیشن ویندوز
+public function verify_scraper_license() {
+    $key = $_POST['license_key'] ?? '';
+    $hwid = $_POST['hwid'] ?? '';
+    
+    $db = Database::getInstance();
+    $license = $db->query("SELECT * FROM user_subscriptions 
+                         WHERE license_key = ? AND status = 'active' 
+                         AND expiry_date > NOW()", [$key])->fetch();
+                         
+    if ($license) {
+        // قفل کردن به اولین سیستمی که لایسنس را وارد می‌کند
+        if (empty($license['hwid'])) {
+            $db->query("UPDATE user_subscriptions SET hwid = ? WHERE id = ?", [$hwid, $license['id']]);
+            echo json_encode(['status' => 'success', 'user_id' => $license['user_id']]);
+        } elseif ($license['hwid'] === $hwid) {
+            echo json_encode(['status' => 'success', 'user_id' => $license['user_id']]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'این لایسنس قبلاً روی سیستم دیگری فعال شده است.']);
+        }
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'لایسنس نامعتبر یا منقضی شده است.']);
+    }
+    exit;
+}
+
+// ۲. دریافت مستقیم سرنخ از اسکرپر پایتون به بخش بازاریابی سامانه
+public function sync_scraper_data() {
+    $db = Database::getInstance();
+    $sql = "INSERT INTO marketing_leads (user_id, name, phone, category, source, city, description, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+    
+    $params = [
+        $_POST['user_id'] ?? 0,
+        $_POST['title'] ?? 'آگهی اسکرپر',
+        $_POST['phone'] ?? '',
+        $_POST['category'] ?? 'General',
+        $_POST['source'] ?? 'WinBo App',
+        $_POST['city'] ?? '',
+        $_POST['desc'] ?? ''
+    ];
+
+    if (!empty($params[2])) {
+        $db->query($sql, $params);
+        echo json_encode(['status' => 'success']);
+    } else {
+        echo json_encode(['status' => 'failed']);
+    }
+    exit;
+}
 } 

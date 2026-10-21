@@ -199,4 +199,17 @@ class PurchasesController {
         }
         return false;
     }
+    public function delete($id) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['id'])) {
+            $purchaseId = sanitize($id);
+            
+            if ($this->purchaseModel->deletePurchase($purchaseId)) {
+                FlashMessage::set('message', "فاکتور خرید شماره #{$purchaseId} با موفقیت حذف شد و موجودی انبار اصلاح گردید.");
+            } else {
+                FlashMessage::set('message', "خطا در حذف فاکتور خرید شماره #{$purchaseId}.", 'error');
+            }
+        }
+
+        redirect(APP_URL . '/index.php?page=purchases&action=index');
+    }
 }

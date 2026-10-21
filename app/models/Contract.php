@@ -31,39 +31,74 @@ class Contract {
         return $result ? $result->count : 0;
     }
 
-    public function create($data) {
-        $this->db->query('INSERT INTO contracts (client_id, title, service_type, category_id, description, total_amount, start_date, end_date, renewal_type, next_renewal_date, status) VALUES (:client_id, :title, :service_type, :category_id, :description, :total_amount, :start_date, :end_date, :renewal_type, :next_renewal_date, :status)');
-        $this->db->bind(':client_id', $data['client_id']);
-        $this->db->bind(':title', $data['title']);
-        $this->db->bind(':service_type', $data['service_type']);
-        $this->db->bind(':category_id', $data['category_id'] ?? null);
-        $this->db->bind(':description', $data['description']);
-        $this->db->bind(':total_amount', $data['total_amount']);
-        $this->db->bind(':start_date', $data['start_date']);
-        $this->db->bind(':end_date', $data['end_date']);
-        $this->db->bind(':renewal_type', $data['renewal_type']);
-        $this->db->bind(':next_renewal_date', $data['next_renewal_date']);
-        $this->db->bind(':status', $data['status']);
-        return $this->db->execute() ? $this->db->lastInsertId() : false;
-    }
+public function create($data) {
+    $sql = 'INSERT INTO contracts (
+        client_id, title, service_type, category_id, description, 
+        total_amount, prepayment_amount, vat_rate, start_date, end_date, 
+        final_payment_due_date, renewal_type, next_renewal_date, status
+    ) VALUES (
+        :client_id, :title, :service_type, :category_id, :description, 
+        :total_amount, :prepayment_amount, :vat_rate, :start_date, :end_date, 
+        :final_payment_due_date, :renewal_type, :next_renewal_date, :status
+    )';
 
-    public function update($id, $data) {
-        $sql = 'UPDATE contracts SET client_id = :client_id, title = :title, service_type = :service_type, category_id = :category_id, description = :description, total_amount = :total_amount, start_date = :start_date, end_date = :end_date, renewal_type = :renewal_type, next_renewal_date = :next_renewal_date, status = :status, updated_at = CURRENT_TIMESTAMP WHERE id = :id';
-        $this->db->query($sql);
-        $this->db->bind(':client_id', $data['client_id']);
-        $this->db->bind(':title', $data['title']);
-        $this->db->bind(':service_type', $data['service_type']);
-        $this->db->bind(':category_id', $data['category_id'] ?? null);
-        $this->db->bind(':description', $data['description']);
-        $this->db->bind(':total_amount', $data['total_amount']);
-        $this->db->bind(':start_date', $data['start_date']);
-        $this->db->bind(':end_date', $data['end_date']);
-        $this->db->bind(':renewal_type', $data['renewal_type']);
-        $this->db->bind(':next_renewal_date', $data['next_renewal_date']);
-        $this->db->bind(':status', $data['status']);
-        $this->db->bind(':id', $id);
-        return $this->db->execute();
-    }
+    $this->db->query($sql);
+    $this->db->bind(':client_id', $data['client_id']);
+    $this->db->bind(':title', $data['title']);
+    $this->db->bind(':service_type', $data['service_type']);
+    $this->db->bind(':category_id', $data['category_id'] ?? null);
+    $this->db->bind(':description', $data['description'] ?? null);
+    $this->db->bind(':total_amount', $data['total_amount']);
+    $this->db->bind(':prepayment_amount', $data['prepayment_amount'] ?? 0);
+    $this->db->bind(':vat_rate', $data['vat_rate'] ?? 0);
+    $this->db->bind(':start_date', $data['start_date']);
+    $this->db->bind(':end_date', $data['end_date'] ?? null);
+    $this->db->bind(':final_payment_due_date', $data['final_payment_due_date'] ?? null);
+    $this->db->bind(':renewal_type', $data['renewal_type'] ?? 'none');
+    $this->db->bind(':next_renewal_date', $data['next_renewal_date'] ?? null);
+    $this->db->bind(':status', $data['status'] ?? 'pending');
+
+    return $this->db->execute() ? $this->db->lastInsertId() : false;
+}
+
+public function update($id, $data) {
+    $sql = 'UPDATE contracts SET 
+        client_id = :client_id, 
+        title = :title, 
+        service_type = :service_type, 
+        category_id = :category_id, 
+        description = :description, 
+        total_amount = :total_amount, 
+        prepayment_amount = :prepayment_amount, 
+        vat_rate = :vat_rate, 
+        start_date = :start_date, 
+        end_date = :end_date, 
+        final_payment_due_date = :final_payment_due_date, 
+        renewal_type = :renewal_type, 
+        next_renewal_date = :next_renewal_date, 
+        status = :status, 
+        updated_at = CURRENT_TIMESTAMP 
+    WHERE id = :id';
+
+    $this->db->query($sql);
+    $this->db->bind(':client_id', $data['client_id']);
+    $this->db->bind(':title', $data['title']);
+    $this->db->bind(':service_type', $data['service_type']);
+    $this->db->bind(':category_id', $data['category_id'] ?? null);
+    $this->db->bind(':description', $data['description'] ?? null);
+    $this->db->bind(':total_amount', $data['total_amount']);
+    $this->db->bind(':prepayment_amount', $data['prepayment_amount'] ?? 0);
+    $this->db->bind(':vat_rate', $data['vat_rate'] ?? 0);
+    $this->db->bind(':start_date', $data['start_date']);
+    $this->db->bind(':end_date', $data['end_date'] ?? null);
+    $this->db->bind(':final_payment_due_date', $data['final_payment_due_date'] ?? null);
+    $this->db->bind(':renewal_type', $data['renewal_type'] ?? 'none');
+    $this->db->bind(':next_renewal_date', $data['next_renewal_date'] ?? null);
+    $this->db->bind(':status', $data['status'] ?? 'pending');
+    $this->db->bind(':id', $id);
+
+    return $this->db->execute();
+}
     
     public function delete($id) {
         $this->db->query('DELETE FROM contracts WHERE id = :id');
@@ -203,6 +238,45 @@ public function getFilteredContracts($filters) {
             $this->db->bind(':category_id', $filters['category_id']);
         }
 
+        return $this->db->fetchAll();
+    }
+    
+    public function getClausesByContractId($contractId) {
+        $this->db->query("SELECT * FROM contract_clauses WHERE contract_id = :contract_id ORDER BY sort_order ASC, id ASC");
+        $this->db->bind(':contract_id', $contractId);
+        return $this->db->fetchAll();
+    }
+
+    /**
+     * ذخیره‌سازی یا بروزرسانی انبوه مواد قرارداد
+     */
+    public function syncClauses($contractId, array $clauses) {
+        // ابتدا مواد قبلی قرارداد را پاک می‌کنیم
+        $this->db->query("DELETE FROM contract_clauses WHERE contract_id = :contract_id");
+        $this->db->bind(':contract_id', $contractId);
+        $this->db->execute();
+
+        // درج مواد جدید
+        $sql = "INSERT INTO contract_clauses (contract_id, title, content, sort_order) VALUES (:contract_id, :title, :content, :sort_order)";
+        foreach ($clauses as $index => $clause) {
+            if (empty($clause['title']) || empty($clause['content'])) continue;
+            
+            $this->db->query($sql);
+            $this->db->bind(':contract_id', $contractId);
+            $this->db->bind(':title', $clause['title']);
+            $this->db->bind(':content', $clause['content']);
+            $this->db->bind(':sort_order', $index + 1);
+            $this->db->execute();
+        }
+        return true;
+    }
+
+    /**
+     * دریافت الگوهای پیش‌فرض مواد بر اساس نوع خدمت
+     */
+    public function getTemplateClausesByServiceType($serviceType) {
+        $this->db->query("SELECT title, content FROM contract_templates WHERE service_type = :service_type ORDER BY sort_order ASC");
+        $this->db->bind(':service_type', $serviceType);
         return $this->db->fetchAll();
     }
 }

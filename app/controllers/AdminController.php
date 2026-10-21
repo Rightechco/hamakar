@@ -1,4 +1,5 @@
 <?php
+
 // app/controllers/AdminController.php
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -40,7 +41,7 @@ require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../models/Service.php';
 require_once __DIR__ . '/../models/InvoiceItem.php';
 
-class AdminController {
+class AdminController extends Controller {
     private $auth;
     private $userModel, $clientModel, $contractModel, $invoiceModel, $paymentModel, $projectModel, $taskModel, $reportModel, $ticketModel, $ticketReplyModel, $smsService, $attendanceModel, $leaveRequestModel, $accountModel, $journalVoucherModel, $journalEntryModel, $expenseModel, $financialReportModel, $budgetModel, $fixedAssetModel, $clientLogModel, $clientContactModel, $announcementModel, $trainingNeedModel, $trainingCourseModel, $skillAssessmentModel, $categoryModel,$payrollSettingModel, $serviceModel, $payrollModel;
     private $db;
@@ -92,24 +93,27 @@ class AdminController {
 
      
     public function dashboard() {
-        $usersCount = $this->userModel->countAll();
-        $clientsCount = $this->clientModel->countAll();
-        $contractsCount = $this->contractModel->countAll();
-        $invoicesCount = $this->invoiceModel->countAll();
-        
-        $user = $this->auth->user();
-        $announcements = $this->announcementModel->getAnnouncementsForRole($user->role);
+    // دریافت آمار کلی برای کارت‌های KPI
+    $usersCount = $this->userModel->countAll();
+    $clientsCount = $this->clientModel->countAll();
+    $contractsCount = $this->contractModel->countAll();
+    $invoicesCount = $this->invoiceModel->countAll();
+    
+    // دریافت اطلاعیه‌های مربوط به نقش کاربر جاری
+    $user = $this->auth->user();
+    $announcements = $this->announcementModel->getAnnouncementsForRole($user->role);
 
-        view('admin/dashboard', [
-            'layout' => 'admin_layout',
-            'title' => 'Admin Dashboard',
-            'usersCount' => $usersCount,
-            'clientsCount' => $clientsCount,
-            'contractsCount' => $contractsCount,
-            'invoicesCount' => $invoicesCount,
-            'announcements' => $announcements
-        ]);
-    }
+    // ارسال کامل متغیرها به ویو
+    view('admin/dashboard', [
+        'layout' => 'admin_layout',
+        'title' => 'داشبورد مدیریتی هماکار',
+        'usersCount' => $usersCount,
+        'clientsCount' => $clientsCount,
+        'contractsCount' => $contractsCount,
+        'invoicesCount' => $invoicesCount,
+        'announcements' => $announcements
+    ]);
+}
     
     public function users() {
         $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
@@ -328,21 +332,54 @@ class AdminController {
         redirect(APP_URL . '/index.php?page=admin&action=users');
     }
     
-    public function clients() { 
-        $clients = $this->clientModel->getAllClients(); 
-        $users = $this->userModel->getAllUsers(); 
-        $userNames = [];
-        foreach($users as $user) {
-            $userNames[$user->id] = $user->name;
-        }
+    public function clients() {
+    $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
 
-        view('admin/clients/index', [ 
-            'layout' => 'admin_layout',
-            'title' => 'مدیریت مشتریان', 
-            'clients' => $clients, 
-            'userNames' => $userNames 
-        ]);
+    // ۱. دریافت پارامترهای فیلتر از ورودی GET
+    $search = trim($_GET['search'] ?? '');
+    $user_type = trim($_GET['user_type'] ?? '');
+    $start_date = trim($_GET['start_date'] ?? '');
+    $end_date = trim($_GET['end_date'] ?? '');
+
+    // ۲. دریافت لیست مشتریان فیلتر شده از مدل
+    $clients = $this->clientModel->getFilteredClients($search, $user_type, $start_date, $end_date);
+
+    // ۳. بررسی و قطع خروجی در صورت درخواست AJAX
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($clients, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit();
     }
+
+    // ۴. دریافت لیست نام کاربران برای جدول
+    $allUsers = $this->userModel->getAllUsers();
+    $userNames = [];
+    if (!empty($allUsers)) {
+        foreach ($allUsers as $u) {
+            $userNames[$u->id] = $u->name;
+        }
+    }
+
+    $filters = [
+        'search' => $search,
+        'user_type' => $user_type,
+        'start_date_jalali' => $_GET['start_date_jalali'] ?? '',
+        'end_date_jalali' => $_GET['end_date_jalali'] ?? '',
+        'start_date' => $start_date,
+        'end_date' => $end_date
+    ];
+
+    view('admin/clients/index', [
+        'layout' => 'admin_layout',
+        'title' => 'مدیریت مشتریان و کارفرمایان',
+        'clients' => $clients,
+        'userNames' => $userNames,
+        'filters' => $filters
+    ]);
+}
 
     public function createClient() { 
         $users = $this->userModel->getAllUsers(); 
@@ -882,138 +919,293 @@ class AdminController {
             'serviceTypes' => $this->getServiceTypes()
         ]);
     }
-    public function storeContract() {
-        $this->auth->restrict(['admin', 'accountant']);
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // app/controllers/AdminController.php
+
+private function cleanNumber($numberString) {
+    if (empty($numberString)) return 0.0;
+    $englishDigits = $this->convertPersianNumbersToEnglish((string)$numberString);
+    $cleanString = str_replace([',', ' '], '', $englishDigits);
+    return (float)$cleanString;
+}
+
+public function storeContract() {
+    $this->auth->restrict(['admin', 'accountant']);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $totalAmount = $this->cleanNumber($_POST['total_amount'] ?? 0);
+            $prepaymentAmount = $this->cleanNumber($_POST['prepayment_amount'] ?? 0);
+            $vatRate = $this->cleanNumber($_POST['vat_rate'] ?? 0); // دریافت درصد مالیات سفارشی
+            $remainingAmount = $totalAmount - $prepaymentAmount;
+
+            $startDate = $this->convertJalaliToGregorianString($_POST['start_date'] ?? null) ?: date('Y-m-d');
+            $endDate = $this->convertJalaliToGregorianString($_POST['end_date'] ?? null);
+            $finalPaymentDueDate = $this->convertJalaliToGregorianString($_POST['final_payment_due_date'] ?? null) ?: ($endDate ?: $startDate);
+            $nextRenewalDate = $this->convertJalaliToGregorianString($_POST['next_renewal_date'] ?? null);
+
             $contractData = [
                 'client_id' => sanitize($_POST['client_id']),
                 'title' => sanitize($_POST['title']),
                 'service_type' => sanitize($_POST['service_type']),
-                'description' => sanitize($_POST['description']),
-                'total_amount' => sanitize($_POST['total_amount']),
-                'prepayment_amount' => sanitize($_POST['prepayment_amount'] ?? 0),
-                'start_date' => $this->convertJalaliToGregorianString($_POST['start_date'] ?? null),
-                'end_date' => $this->convertJalaliToGregorianString($_POST['end_date'] ?? null),
-                'final_payment_due_date' => $this->convertJalaliToGregorianString($_POST['final_payment_due_date'] ?? null),
-                'renewal_type' => sanitize($_POST['renewal_type']),
-                'next_renewal_date' => $this->convertJalaliToGregorianString($_POST['next_renewal_date'] ?? null),
-                'status' => sanitize($_POST['status']),
+                'category_id' => !empty($_POST['category_id']) ? sanitize($_POST['category_id']) : null,
+                'description' => sanitize($_POST['description'] ?? ''),
+                'total_amount' => $totalAmount,
+                'prepayment_amount' => $prepaymentAmount,
+                'vat_rate' => $vatRate,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'final_payment_due_date' => $finalPaymentDueDate,
+                'renewal_type' => sanitize($_POST['renewal_type'] ?? 'none'),
+                'next_renewal_date' => $nextRenewalDate,
+                'status' => sanitize($_POST['status'] ?? 'pending'),
             ];
 
             $contractId = $this->contractModel->create($contractData);
 
             if ($contractId) {
-                
-        $client = $this->clientModel->findById($contractData['client_id']);
-        if ($client && !empty($client->phone)) {
-            $message = "مشتری گرامی، قرارداد شما با عنوان '{$contractData['title']}' با موفقیت در سیستم ثبت گردید.\nرایان تکرو";
-            $this->smsService->sendDirectSms($client->phone, $message);
-        }
-                $totalAmount = (float)$contractData['total_amount'];
-                $prepaymentAmount = (float)$contractData['prepayment_amount'];
+                if (!empty($_POST['clauses']) && is_array($_POST['clauses'])) {
+                    $this->contractModel->syncClauses($contractId, $_POST['clauses']);
+                }
 
+                $createdInvoicesInfo = [];
+                $lastInvoiceNum = $this->invoiceModel->getLastInvoiceNumber();
+                $invNumPrepayment = $this->generateNextInvoiceNumber($lastInvoiceNum);
+
+                // ۱. صدور فاکتور پیش‌پرداخت (با درصد مالیات تعیین‌شده)
                 if ($prepaymentAmount > 0) {
                     $prepaymentInvoiceData = [
-                        'invoice_number' => $this->generateNextInvoiceNumber($this->invoiceModel->getLastInvoiceNumber()),
+                        'invoice_number' => $invNumPrepayment,
                         'client_id' => $contractData['client_id'],
                         'contract_id' => $contractId,
-                        'issue_date' => $contractData['start_date'],
-                        'due_date' => $contractData['start_date'],
+                        'invoice_type' => 'contract',
+                        'issue_date' => $startDate,
+                        'due_date' => $startDate,
                         'subtotal' => $prepaymentAmount,
-                        'vat_rate' => 0,
+                        'vat_rate' => $vatRate,
                         'description' => 'پیش پرداخت قرارداد: ' . $contractData['title'],
                         'status' => 'pending',
                     ];
-                    $this->createInvoiceAndJournal($prepaymentInvoiceData);
+                    
+                    $resPrepayment = $this->createInvoiceAndJournal($prepaymentInvoiceData);
+                    if ($resPrepayment) {
+                        $createdInvoicesInfo[] = 'پیش‌پرداخت (' . number_format($prepaymentAmount) . ' تومان)';
+                    }
                 }
 
-                $remainingAmount = $totalAmount - $prepaymentAmount;
+                // ۲. صدور فاکتور تسویه نهایی (با درصد مالیات تعیین‌شده)
                 if ($remainingAmount > 0) {
+                    $invNumFinal = $this->generateNextInvoiceNumber($invNumPrepayment);
+
                     $finalInvoiceData = [
-                        'invoice_number' => $this->generateNextInvoiceNumber($this->invoiceModel->getLastInvoiceNumber(true)),
+                        'invoice_number' => $invNumFinal,
                         'client_id' => $contractData['client_id'],
                         'contract_id' => $contractId,
-                        'issue_date' => $contractData['start_date'],
-                        'due_date' => $contractData['final_payment_due_date'],
+                        'invoice_type' => 'contract',
+                        'issue_date' => $startDate,
+                        'due_date' => $finalPaymentDueDate,
                         'subtotal' => $remainingAmount,
-                        'vat_rate' => 9,
+                        'vat_rate' => $vatRate, // اعمال دقیق درصد مالیات سفارشی کاربر
                         'description' => 'تسویه نهایی قرارداد: ' . $contractData['title'],
                         'status' => 'pending',
                     ];
-                    $this->createInvoiceAndJournal($finalInvoiceData);
+
+                    $resFinal = $this->createInvoiceAndJournal($finalInvoiceData);
+                    if ($resFinal) {
+                        $createdInvoicesInfo[] = 'تسویه نهایی (' . number_format($remainingAmount) . ' تومان)';
+                    }
                 }
 
-                FlashMessage::set('message', 'قرارداد و فاکتورهای مربوطه با موفقیت ایجاد شدند.');
+                FlashMessage::set('message', 'قرارداد و فاکتورها با مالیات ' . $vatRate . '٪ با موفقیت صادر شدند.');
                 redirect(APP_URL . '/index.php?page=admin&action=contracts');
+            }
+        } catch (Exception $e) {
+            FlashMessage::set('message', 'خطا: ' . $e->getMessage(), 'error');
+            redirect_back();
+        }
+    }
+}
+
+public function updateContract($id) {
+    $this->auth->restrict(['admin', 'accountant']); 
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $totalAmount = $this->cleanNumber($_POST['total_amount'] ?? 0);
+            $prepaymentAmount = $this->cleanNumber($_POST['prepayment_amount'] ?? 0);
+            $vatRate = $this->cleanNumber($_POST['vat_rate'] ?? 0);
+
+            $startDate = $this->convertJalaliToGregorianString($_POST['start_date'] ?? null) ?: date('Y-m-d');
+            $endDate = $this->convertJalaliToGregorianString($_POST['end_date'] ?? null);
+            $finalPaymentDueDate = $this->convertJalaliToGregorianString($_POST['final_payment_due_date'] ?? null) ?: ($endDate ?: $startDate);
+            $nextRenewalDate = $this->convertJalaliToGregorianString($_POST['next_renewal_date'] ?? null);
+
+            $data = [
+                'client_id' => sanitize($_POST['client_id']),
+                'title' => sanitize($_POST['title']),
+                'service_type' => sanitize($_POST['service_type']),
+                'category_id' => !empty($_POST['category_id']) ? sanitize($_POST['category_id']) : null,
+                'description' => sanitize($_POST['description'] ?? ''),
+                'total_amount' => $totalAmount,
+                'prepayment_amount' => $prepaymentAmount,
+                'vat_rate' => $vatRate,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'final_payment_due_date' => $finalPaymentDueDate,
+                'renewal_type' => sanitize($_POST['renewal_type'] ?? 'none'),
+                'next_renewal_date' => $nextRenewalDate,
+                'status' => sanitize($_POST['status'] ?? 'pending'),
+            ];
+
+            if ($this->contractModel->update($id, $data)) {
+                if (isset($_POST['clauses']) && is_array($_POST['clauses'])) {
+                    $this->contractModel->syncClauses($id, $_POST['clauses']);
+                }
+
+                $this->syncContractInvoices($id, $data);
+
+                FlashMessage::set('message', 'قرارداد و فاکتورها به‌روزرسانی شدند.');
+                redirect(APP_URL . '/index.php?page=admin&action=contracts');
+            }
+        } catch (Exception $e) {
+            FlashMessage::set('message', 'خطا: ' . $e->getMessage(), 'error');
+            redirect_back();
+        }
+    }
+}
+
+private function syncContractInvoices($contractId, $contractData) {
+    $totalAmount = (float)$contractData['total_amount'];
+    $prepaymentAmount = (float)$contractData['prepayment_amount'];
+    $vatRate = (float)($contractData['vat_rate'] ?? 0);
+    $remainingAmount = $totalAmount - $prepaymentAmount;
+    
+    $startDate = $contractData['start_date'] ?: date('Y-m-d');
+    $finalPaymentDueDate = $contractData['final_payment_due_date'] ?: $startDate;
+
+    $this->db->query("SELECT * FROM invoices WHERE contract_id = :contract_id ORDER BY id ASC");
+    $this->db->bind(':contract_id', $contractId);
+    $existingInvoices = $this->db->fetchAll() ?? [];
+
+    if (empty($existingInvoices)) {
+        $lastInvoiceNum = $this->invoiceModel->getLastInvoiceNumber();
+        $invNumPrepayment = $this->generateNextInvoiceNumber($lastInvoiceNum);
+
+        if ($prepaymentAmount > 0) {
+            $this->createInvoiceAndJournal([
+                'invoice_number' => $invNumPrepayment,
+                'client_id'      => $contractData['client_id'],
+                'contract_id'    => $contractId,
+                'invoice_type'   => 'contract',
+                'issue_date'     => $startDate,
+                'due_date'       => $startDate,
+                'subtotal'       => $prepaymentAmount,
+                'vat_rate'       => $vatRate,
+                'description'    => 'پیش پرداخت قرارداد: ' . $contractData['title'],
+                'status'         => 'pending',
+            ]);
+            $lastInvoiceNum = $invNumPrepayment;
+        }
+
+        if ($remainingAmount > 0) {
+            $invNumFinal = $this->generateNextInvoiceNumber($lastInvoiceNum);
+            $this->createInvoiceAndJournal([
+                'invoice_number' => $invNumFinal,
+                'client_id'      => $contractData['client_id'],
+                'contract_id'    => $contractId,
+                'invoice_type'   => 'contract',
+                'issue_date'     => $startDate,
+                'due_date'       => $finalPaymentDueDate,
+                'subtotal'       => $remainingAmount,
+                'vat_rate'       => $vatRate,
+                'description'    => 'تسویه نهایی قرارداد: ' . $contractData['title'],
+                'status'         => 'pending',
+            ]);
+        }
+    } else {
+        foreach ($existingInvoices as $inv) {
+            if ($inv->status === 'pending') {
+                $isPrepayment = (mb_strpos($inv->description, 'پیش پرداخت') !== false);
                 
-            } else {
-                FlashMessage::set('message', 'خطا در ایجاد قرارداد.', 'error');
-                redirect_back();
+                $subtotal = $isPrepayment ? $prepaymentAmount : $remainingAmount;
+                $dueDate = $isPrepayment ? $startDate : $finalPaymentDueDate;
+                $desc = ($isPrepayment ? 'پیش پرداخت قرارداد: ' : 'تسویه نهایی قرارداد: ') . $contractData['title'];
+                
+                $vatAmount = ($subtotal * $vatRate) / 100;
+                $total = $subtotal + $vatAmount;
+
+                $sql = "UPDATE invoices SET 
+                            client_id = :client_id,
+                            issue_date = :issue_date,
+                            due_date = :due_date,
+                            subtotal = :subtotal,
+                            vat_amount = :vat_amount,
+                            total_amount = :total_amount,
+                            description = :description,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = :id";
+
+                $this->db->query($sql);
+                $this->db->bind(':client_id', $contractData['client_id']);
+                $this->db->bind(':issue_date', $startDate);
+                $this->db->bind(':due_date', $dueDate);
+                $this->db->bind(':subtotal', $subtotal);
+                $this->db->bind(':vat_amount', $vatAmount);
+                $this->db->bind(':total_amount', $total);
+                $this->db->bind(':description', $desc);
+                $this->db->bind(':id', $inv->id);
+                $this->db->execute();
             }
         }
     }
-    
+}
 
     public function editContract($id) {
         $this->auth->restrict(['admin', 'accountant']);
         $contract = $this->contractModel->findById($id);
-        $clients = $this->clientModel->getAllClients();
-
         if (!$contract) {
             FlashMessage::set('message', 'قرارداد مورد نظر یافت نشد.', 'error');
             redirect(APP_URL . '/index.php?page=admin&action=contracts');
         }
 
+        $clauses = $this->contractModel->getClausesByContractId($id);
+
         $start_date_jalali = ($contract->start_date) ? jdate('Y/m/d', strtotime($contract->start_date)) : '';
         $end_date_jalali = ($contract->end_date) ? jdate('Y/m/d', strtotime($contract->end_date)) : '';
-        $next_renewal_date_jalali = ($contract->next_renewal_date) ? jdate('Y/m/d', strtotime($contract->next_renewal_date)) : '';
 
         view('admin/contracts/create_edit', [
             'layout' => 'admin_layout',
-            'title' => 'Edit Contract',
+            'title' => 'ویرایش تخصصی قرارداد',
             'contract' => $contract,
+            'clauses' => $clauses,
             'clients' => $this->clientModel->getAllClients(),
             'serviceTypes' => $this->getServiceTypes(),
             'start_date_jalali' => $start_date_jalali,
             'end_date_jalali' => $end_date_jalali,
-            'next_renewal_date_jalali' => $next_renewal_date_jalali
         ]);
     }
 
-    public function updateContract($id) {
-        $this->auth->restrict(['admin', 'accountant']); 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            
-            $data = [
-                'client_id' => sanitize($_POST['client_id']),
-                'title' => sanitize($_POST['title']),
-                'service_type' => sanitize($_POST['service_type']),
-                'description' => sanitize($_POST['description']),
-                'total_amount' => sanitize($_POST['total_amount']),
-                'renewal_type' => sanitize($_POST['renewal_type']),
-                'status' => sanitize($_POST['status']),
-
-                'start_date' => $this->convertJalaliToGregorianString($_POST['start_date'] ?? null),
-                'end_date' => $this->convertJalaliToGregorianString($_POST['end_date'] ?? null),
-                'next_renewal_date' => $this->convertJalaliToGregorianString($_POST['next_renewal_date'] ?? null),
-            ];
-            
-            $validator = Validator::make($data);
-            $isValid = $validator->validate([ /* ... validation rules ... */ ]);
-
-            if ($isValid) {
-                if ($this->contractModel->update($id, $data)) {
-                    FlashMessage::set('message', 'قرارداد با موفقیت به‌روزرسانی شد.');
-                    redirect(APP_URL . '/index.php?page=admin&action=contracts');
-                } else {
-                    FlashMessage::set('message', 'خطا در به‌روزرسانی قرارداد.', 'error');
-                    redirect(APP_URL . '/index.php?page=admin&action=contracts_edit&id=' . $id);
-                }
-            } else {
-                FlashMessage::set('message', implode('<br>', array_merge(...array_values($validator->errors()))), 'error');
-                redirect(APP_URL . '/index.php?page=admin&action=contracts_edit&id=' . $id);
-            }
+    public function viewContract($id) {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
+        $contract = $this->contractModel->findById($id);
+        if (!$contract) {
+            FlashMessage::set('message', 'قرارداد یافت نشد.', 'error');
+            redirect(APP_URL . '/index.php?page=admin&action=contracts');
         }
+        $client = $this->clientModel->findById($contract->client_id); 
+        $clauses = $this->contractModel->getClausesByContractId($id);
+
+        view('admin/contracts/view_contract', [
+            'layout' => 'guest_layout',
+            'title' => 'سند رسمی قرارداد - ' . $contract->title,
+            'contract' => $contract,
+            'clauses' => $clauses,
+            'customer' => $client, 
+            'serviceTypes' => $this->getServiceTypes(),
+            'companyInfo' => [
+                'name' => 'شرکت رایان تکرو',
+                'address' => 'تبریز، بلوار آزادی، جنب شهرداری منطقه 3',
+                'phone' => '۰۴۱۳۴۴۰۱۱۷۹',
+                'email' => 'info@rayantakro.com',
+            ]
+        ]);
     }
 
     public function deleteContract($id) {
@@ -1028,37 +1220,9 @@ class AdminController {
         redirect(APP_URL . '/index.php?page=admin&action=contracts');
     }
     
-    public function viewContract($id) {
-        $contract = $this->contractModel->findById($id);
-        if (!$contract) {
-            FlashMessage::set('message', 'قرارداد مورد نظر یافت نشد.', 'error');
-            redirect(APP_URL . '/index.php?page=admin&action=contracts');
-        }
-        $client = $this->clientModel->findById($contract->client_id); 
-
-        view('admin/contracts/view_contract', [
-            'layout' => 'guest_layout',
-            'title' => 'جزئیات قرارداد',
-            'contract' => $contract,
-            'customer' => $client, 
-            'serviceTypes' => $this->getServiceTypes(),
-            'companyInfo' => [
-                'name' => 'شرکت رایان تکرو',
-                'address' => 'تبریز، بلوار آزادی، جنب شهرداری منطقه 3',
-                'phone' => '۰۴۱۳۴۴۰۱۱۷۹',
-                'email' => 'info@rayantakro.com',
-                'logo_path' => APP_URL . '/assets/img/company_logo.png',
-                'signature_path' => APP_URL . '/assets/img/company_signature.png',
-                'seal_path' => APP_URL . '/assets/img/company_seal.png',
-            ]
-        ]);
-    }
-
-    
 public function invoices() {
     $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
     
-    // دریافت فیلترها از درخواست
     $filters = [
         'client_id' => sanitize($_GET['client_id'] ?? null),
         'status' => sanitize($_GET['status'] ?? null),
@@ -1068,33 +1232,35 @@ public function invoices() {
         'invoice_type' => sanitize($_GET['invoice_type'] ?? null)
     ];
     
-    // ✅ استفاده از متد getAllCombinedInvoices برای دریافت داده‌های کامل
-    $invoices = $this->invoiceModel->getAllCombinedInvoices(); 
+    $invoices = $this->invoiceModel->getAllCombinedInvoices() ?? []; 
 
-    // فیلتر کردن داده‌ها بر اساس پارامترهای GET
+    // فیلتر کردن هوشمند فاکتورها
     $filteredInvoices = array_filter($invoices, function($invoice) use ($filters) {
-        $clientMatch = empty($filters['client_id']) || $invoice->client_id == $filters['client_id'];
-        $statusMatch = empty($filters['status']) || $invoice->status == $filters['status'];
-        $typeMatch = empty($filters['invoice_type']) || $invoice->type == $filters['invoice_type'];
+        $clientMatch = empty($filters['client_id']) || (isset($invoice->client_id) && $invoice->client_id == $filters['client_id']);
+        $statusMatch = empty($filters['status']) || (isset($invoice->status) && $invoice->status == $filters['status']);
+        
+        // اصلاح بررسی نوع فاکتور
+        $invType = $invoice->invoice_type ?? ($invoice->type ?? '');
+        $typeMatch = empty($filters['invoice_type']) || $invType == $filters['invoice_type'];
         
         $searchMatch = empty($filters['search']) || 
-                       (isset($invoice->invoice_number) && strpos($invoice->invoice_number, $filters['search']) !== false) || 
-                       (isset($invoice->client_name) && strpos($invoice->client_name, $filters['search']) !== false);
+                       (isset($invoice->invoice_number) && mb_strpos($invoice->invoice_number, $filters['search']) !== false) || 
+                       (isset($invoice->client_name) && mb_strpos($invoice->client_name, $filters['search']) !== false);
 
-        // تبدیل تاریخ‌ها برای فیلتر
-        $issueDateTimestamp = strtotime($invoice->date);
-        $startMatch = empty($filters['start_date']) || $issueDateTimestamp >= strtotime($filters['start_date']);
-        $endMatch = empty($filters['end_date']) || $issueDateTimestamp <= strtotime($filters['end_date']);
+        // اصلاح بررسی تاریخ صدور
+        $invDate = $invoice->issue_date ?? ($invoice->date ?? null);
+        $issueDateTimestamp = $invDate ? strtotime($invDate) : 0;
+        
+        $startMatch = empty($filters['start_date']) || ($issueDateTimestamp && $issueDateTimestamp >= strtotime($filters['start_date']));
+        $endMatch = empty($filters['end_date']) || ($issueDateTimestamp && $issueDateTimestamp <= strtotime($filters['end_date']));
 
         return $clientMatch && $statusMatch && $typeMatch && $searchMatch && $startMatch && $endMatch;
     });
 
-    // حالا $filteredInvoices شامل داده‌های فیلترشده است و view می‌تواند از آن استفاده کند.
-    
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
         echo json_encode(array_values($filteredInvoices));
-        return;
+        exit();
     }
     
     $clients = $this->clientModel->getAllClients();
@@ -1102,7 +1268,7 @@ public function invoices() {
     view('admin/invoices/index', [
         'layout' => 'admin_layout',
         'title' => 'مدیریت فاکتورها',
-        'invoices' => $filteredInvoices, // ✅ ارسال داده‌های فیلترشده
+        'invoices' => array_values($filteredInvoices),
         'clients' => $clients,
         'filters' => $filters,
         'invoiceTypes' => ['' => 'همه', 'product' => 'فاکتور محصول', 'contract' => 'فاکتور قرارداد', 'service' => 'فاکتور خدمات']
@@ -1206,6 +1372,7 @@ public function invoices() {
     }
     
    public function viewInvoice($id) {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $invoice = $this->invoiceModel->findByIdWithClient($id);
         if (!$invoice) {
             FlashMessage::set('message', 'فاکتور مورد نظر یافت نشد.', 'error');
@@ -1350,13 +1517,10 @@ public function invoices() {
                 'name' => sanitize($_POST['name']),
                 'description' => sanitize($_POST['description']),
                 'client_id' => !empty($_POST['client_id']) ? sanitize($_POST['client_id']) : null,
-                
                 'start_date' => $startDateJalali ? $this->convertJalaliToGregorianString($startDateJalali) : null,
                 'due_date' => $dueDateJalali ? $this->convertJalaliToGregorianString($dueDateJalali) : null,
-                
                 'contract_id' => !empty($_POST['contract_id']) ? sanitize($_POST['contract_id']) : null,
                 'budget' => !empty($_POST['budget']) ? sanitize($_POST['budget']) : 0,
-                
                 'status' => sanitize($_POST['status']),
             ];
 
@@ -1366,6 +1530,33 @@ public function invoices() {
             } else {
                 FlashMessage::set('message', 'خطا در ایجاد پروژه.', 'error');
                 redirect_back();
+            }
+        }
+    }
+
+    public function updateProject($id) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
+            $startDateJalali = !empty($_POST['start_date']) ? sanitize($_POST['start_date']) : null;
+            $dueDateJalali = !empty($_POST['due_date']) ? sanitize($_POST['due_date']) : null;
+
+            $data = [
+                'name' => sanitize($_POST['name']),
+                'description' => sanitize($_POST['description']),
+                'client_id' => !empty($_POST['client_id']) ? sanitize($_POST['client_id']) : null,
+                'start_date' => $startDateJalali ? $this->convertJalaliToGregorianString($startDateJalali) : null,
+                'due_date' => $dueDateJalali ? $this->convertJalaliToGregorianString($dueDateJalali) : null,
+                'contract_id' => !empty($_POST['contract_id']) ? sanitize($_POST['contract_id']) : null,
+                'budget' => !empty($_POST['budget']) ? sanitize($_POST['budget']) : 0,
+                'status' => sanitize($_POST['status']),
+            ];
+
+            if ($this->projectModel->update($id, $data)) {
+                FlashMessage::set('message', 'پروژه با موفقیت به‌روزرسانی شد.');
+                redirect(APP_URL . '/index.php?page=admin&action=projects');
+            } else {
+                FlashMessage::set('message', 'خطا در به‌روزرسانی پروژه.', 'error');
+                redirect(APP_URL . '/index.php?page=admin&action=projects_edit&id=' . $id);
             }
         }
     }
@@ -1469,35 +1660,6 @@ public function invoices() {
             'start_date_jalali' => $start_date_jalali,
             'end_date_jalali' => $end_date_jalali,
         ]);
-    }
-
-    public function updateProject($id) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            
-            $startDateJalali = !empty($_POST['start_date']) ? sanitize($_POST['start_date']) : null;
-            $dueDateJalali = !empty($_POST['due_date']) ? sanitize($_POST['due_date']) : null;
-
-            $data = [
-                'name' => sanitize($_POST['name']),
-                'description' => sanitize($_POST['description']),
-                'client_id' => !empty($_POST['client_id']) ? sanitize($_POST['client_id']) : null,
-                
-                'start_date' => $startDateJalali ? $this->convertJalaliToGregorianString($startDateJalali) : null,
-                'due_date' => $dueDateJalali ? $this->convertJalaliToGregorianString($dueDateJalali) : null,
-                
-                'contract_id' => !empty($_POST['contract_id']) ? sanitize($_POST['contract_id']) : null,
-                'budget' => !empty($_POST['budget']) ? sanitize($_POST['budget']) : 0,
-                'status' => sanitize($_POST['status']),
-            ];
-
-            if ($this->projectModel->update($id, $data)) {
-                FlashMessage::set('message', 'پروژه با موفقیت به‌روزرسانی شد.');
-                redirect(APP_URL . '/index.php?page=admin&action=projects');
-            } else {
-                FlashMessage::set('message', 'خطا در به‌روزرسانی پروژه.', 'error');
-                redirect(APP_URL . '/index.php?page=admin&action=projects_edit&id=' . $id);
-            }
-        }
     }
 
     public function deleteProject($id) {
@@ -1976,6 +2138,8 @@ public function invoices() {
                 'housing_allowance' => sanitize($_POST['housing_allowance']),
                 'family_allowance' => sanitize($_POST['family_allowance']),
                 'seniority_per_year' => sanitize($_POST['seniority_per_year']),
+                'bonus_rate_percentage' => !empty($_POST['bonus_rate_percentage']) ? sanitize($_POST['bonus_rate_percentage']) : 0,
+                'penalty_rate_percentage' => !empty($_POST['penalty_rate_percentage']) ? sanitize($_POST['penalty_rate_percentage']) : 0,
             ];
 
             if ($settingModel->createOrUpdate($data)) {
@@ -2204,6 +2368,7 @@ public function invoices() {
 
 
     public function financialReports() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'گزارشات مالی'
@@ -2302,6 +2467,7 @@ public function invoices() {
     }
 
     public function accountLedger() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'دفتر کل حساب',
@@ -2327,6 +2493,7 @@ public function invoices() {
     }
 
     public function generalJournal() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'دفتر روزنامه'
@@ -2347,6 +2514,7 @@ public function invoices() {
     }
 
     public function vatReport() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'گزارش مالیات بر ارزش افزوده'
@@ -2445,6 +2613,7 @@ public function invoices() {
     }
 
     public function subledgerReport() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'دفتر تفصیلی',
@@ -2530,6 +2699,7 @@ public function invoices() {
     }
 
     public function budgetReport() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'گزارش بودجه'
@@ -2715,6 +2885,7 @@ public function invoices() {
         redirect(APP_URL . '/index.php?page=admin&action=general_journal');
     }
     public function cashFlowReport() {
+        $this->auth->restrict(['admin', 'accountant', 'accountant_viewer']);
         $data = [
             'layout' => 'admin_layout',
             'title' => 'صورت جریان وجوه نقد'
@@ -3594,20 +3765,28 @@ public function invoices() {
 }
 
 public function addProjectMember() {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $projectId = sanitize($_POST['project_id']);
-        $userId = sanitize($_POST['user_id']);
-        $role = sanitize($_POST['role']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $projectId = sanitize($_POST['project_id']);
+            $userId = sanitize($_POST['user_id']);
+            $role = sanitize($_POST['role']);
 
-        if ($this->projectModel->addMember($projectId, $userId, $role)) {
-            FlashMessage::set('message', 'عضو با موفقیت به پروژه اضافه شد.');
-        } else {
-            FlashMessage::set('message', 'خطا در اضافه کردن عضو.', 'error');
+            try {
+                if ($this->projectModel->addMember($projectId, $userId, $role)) {
+                    FlashMessage::set('message', 'عضو با موفقیت به پروژه اضافه یا نقش آن به‌روزرسانی شد.');
+                } else {
+                    FlashMessage::set('message', 'خطا در افزودن عضو به پروژه.', 'error');
+                }
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    FlashMessage::set('message', 'این کاربر قبلاً به پروژه اضافه شده است.', 'warning');
+                } else {
+                    FlashMessage::set('message', 'خطای پایگاه‌داده: ' . $e->getMessage(), 'error');
+                }
+            }
+
+            redirect(APP_URL . '/index.php?page=admin&action=view_project&id=' . $projectId);
         }
-
-        redirect(APP_URL . '/index.php?page=admin&action=view_project&id=' . $projectId);
     }
-}
 public function storeInvoice() {
     $this->auth->restrict(['admin', 'accountant']);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -3735,71 +3914,60 @@ public function storeInvoice() {
     $accountsReceivable = $this->accountModel->findByCode('AR-1103');
     $salesRevenue = $this->accountModel->findByCode('SR-4101');
 
-    if (!$accountsReceivable) {
-        die('خطای حیاتی: حساب "حساب‌های دریافتنی" با کد AR-1103 در کدینگ حسابداری شما یافت نشد.');
-    }
-    if (!$salesRevenue) {
-        die('خطای حیاتی: حساب "درآمد فروش" با کد SR-4101 در کدینگ حسابداری شما یافت نشد.');
-    }
-
     $subtotal = (float)($invoiceData['subtotal'] ?? 0);
     $vatRate = (float)($invoiceData['vat_rate'] ?? 0);
     $vatAmount = ($subtotal * $vatRate) / 100;
     $totalAmount = $subtotal + $vatAmount;
 
-    $invoiceData['vat_amount'] = $vatAmount;
-    $invoiceData['total_amount'] = $totalAmount;
-
     $invoiceModelData = [
         'invoice_number' => $invoiceData['invoice_number'],
-        'client_id' => $invoiceData['client_id'],
-        'contract_id' => $invoiceData['contract_id'] ?? null,
-        'invoice_type' => $invoiceData['invoice_type'] ?? 'contract',
-        'category_id' => $invoiceData['category_id'] ?? null,
-        'issue_date' => $invoiceData['issue_date'],
-        'due_date' => $invoiceData['due_date'],
-        'subtotal' => $invoiceData['subtotal'],
-        'vat_amount' => $invoiceData['vat_amount'],
-        'total_amount' => $invoiceData['total_amount'],
-        'description' => $invoiceData['description'],
-        'status' => $invoiceData['status'],
+        'client_id'      => $invoiceData['client_id'],
+        'contract_id'    => $invoiceData['contract_id'] ?? null,
+        'invoice_type'   => $invoiceData['invoice_type'] ?? 'contract',
+        'category_id'    => $invoiceData['category_id'] ?? null,
+        'issue_date'     => $invoiceData['issue_date'],
+        'due_date'       => $invoiceData['due_date'],
+        'subtotal'       => $subtotal,
+        'vat_amount'     => $vatAmount,
+        'total_amount'   => $totalAmount,
+        'description'    => $invoiceData['description'] ?? '',
+        'status'         => $invoiceData['status'] ?? 'pending',
     ];
 
     $invoiceId = $this->invoiceModel->create($invoiceModelData);
     if (!$invoiceId) {
+        error_log("Failed to create invoice record in DB: " . json_encode($invoiceModelData));
         return false;
     }
 
-    if (!empty($invoiceItemsData)) {
-        // ✅ اصلاح اینجا: استفاده از createItems
+    if (!empty($invoiceItemsData) && isset($this->invoiceItemModel)) {
         $this->invoiceItemModel->createItems($invoiceId, $invoiceItemsData);
     }
 
-    $smsSentStatus = $this->sendInvoiceSms($invoiceData, $invoiceId);
+    // صدور سند حسابداری
+    if ($accountsReceivable && $salesRevenue) {
+        $description = 'بابت: ' . $invoiceModelData['description'];
+        $voucherData = [
+            'voucher_date' => $invoiceModelData['issue_date'],
+            'description'  => $description,
+            'user_id'      => $this->auth->user()->id ?? 1,
+        ];
+        $voucherId = $this->journalVoucherModel->create($voucherData);
 
-    $description = 'بابت: ' . $invoiceData['description'];
-    $voucherData = [
-        'voucher_date' => $invoiceData['issue_date'],
-        'description' => $description,
-        'user_id' => $this->auth->user()->id,
-    ];
-    $voucherId = $this->journalVoucherModel->create($voucherData);
+        if ($voucherId) {
+            $this->journalEntryModel->create($voucherId, ['account_id' => $accountsReceivable->id, 'debit' => $totalAmount, 'credit' => 0]);
+            $this->journalEntryModel->create($voucherId, ['account_id' => $salesRevenue->id, 'debit' => 0, 'credit' => $subtotal]);
 
-    if ($voucherId) {
-        $this->journalEntryModel->create($voucherId, ['account_id' => $accountsReceivable->id, 'debit' => $totalAmount, 'credit' => 0]);
-        $this->journalEntryModel->create($voucherId, ['account_id' => $salesRevenue->id, 'debit' => 0, 'credit' => $subtotal]);
-
-        if ($vatAmount > 0) {
-            $vatPayable = $this->accountModel->findByCode('LI-2103');
-            if ($vatPayable) {
-                $this->journalEntryModel->create($voucherId, ['account_id' => $vatPayable->id, 'debit' => 0, 'credit' => $vatAmount]);
+            if ($vatAmount > 0) {
+                $vatPayable = $this->accountModel->findByCode('LI-2103');
+                if ($vatPayable) {
+                    $this->journalEntryModel->create($voucherId, ['account_id' => $vatPayable->id, 'debit' => 0, 'credit' => $vatAmount]);
+                }
             }
         }
-    } else {
-        error_log("Error creating journal voucher for invoice " . $invoiceId);
     }
 
-    return ['invoiceId' => $invoiceId, 'smsStatus' => $smsSentStatus];
+    return ['invoiceId' => $invoiceId, 'smsStatus' => 'success'];
 }
 
     private function createProductInvoiceAndJournal($invoiceData, $invoiceItems, $cogsAmount) {
@@ -4228,4 +4396,217 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         }
         return false;
     }
+   // =========================================================
+    // 2. مدیریت پلن‌ها (Plans)
+    // =========================================================
+    
+    public function plans() {
+        try {
+            $this->db->query("SELECT * FROM plans ORDER BY is_featured DESC, price ASC");
+            $plans = $this->db->fetchAll();
+        } catch (Exception $e) { $plans = []; }
+        
+        $this->view('admin/plans/index', ['plans' => $plans]);
+    }
+
+    public function create_plan() {
+        $this->view('admin/plans/create');
+    }
+
+    public function store_plan() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // دریافت و تمیزسازی داده‌ها
+            $title = $_POST['title'];
+            $price = str_replace(',', '', $_POST['price']); // حذف کاما
+            $days = !empty($_POST['days']) ? $_POST['days'] : 30;
+            $description = $_POST['description'];
+            $is_featured = isset($_POST['is_featured']) ? 1 : 0;
+            
+            // [اصلاح خطا]: تبدیل مقادیر خالی به عدد پیش‌فرض
+            $max_records = !empty($_POST['max_records']) ? $_POST['max_records'] : 0;
+            $max_bots = !empty($_POST['max_bots']) ? $_POST['max_bots'] : 1;
+            $color_theme = !empty($_POST['color_theme']) ? $_POST['color_theme'] : 'primary';
+
+            // کوئری اینسرت
+            $sql = "INSERT INTO plans (title, price, days, description, is_featured, is_active, max_records, max_bots, color_theme) 
+                    VALUES (:t, :p, :d, :desc, :if, 1, :mr, :mb, :ct)";
+            
+            $this->db->query($sql);
+            $this->db->bind(':t', $title);
+            $this->db->bind(':p', $price);
+            $this->db->bind(':d', $days);
+            $this->db->bind(':desc', $description);
+            $this->db->bind(':if', $is_featured);
+            // بایند کردن مقادیر عددی اصلاح شده
+            $this->db->bind(':mr', $max_records);
+            $this->db->bind(':mb', $max_bots);
+            $this->db->bind(':ct', $color_theme);
+            
+            if ($this->db->execute()) {
+                FlashMessage::set('پلن جدید با موفقیت ساخته شد');
+                redirect('index.php?page=admin&action=plans');
+            } else {
+                die("خطا در ذخیره سازی");
+            }
+        }
+    }
+
+    public function edit_plan($id) {
+        $this->db->query("SELECT * FROM plans WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $plan = $this->db->single();
+
+        if (!$plan) redirect('index.php?page=admin&action=plans');
+
+        $this->view('admin/plans/edit', ['plan' => $plan]);
+    }
+
+    public function update_plan($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $title = $_POST['title'];
+            $price = str_replace(',', '', $_POST['price']);
+            $days = !empty($_POST['days']) ? $_POST['days'] : 30;
+            $description = $_POST['description'];
+            $is_featured = isset($_POST['is_featured']) ? 1 : 0;
+
+            // [اصلاح خطا]: تبدیل مقادیر خالی به عدد
+            $max_records = !empty($_POST['max_records']) ? $_POST['max_records'] : 0;
+            $max_bots = !empty($_POST['max_bots']) ? $_POST['max_bots'] : 1;
+            $color_theme = !empty($_POST['color_theme']) ? $_POST['color_theme'] : 'primary';
+
+            $sql = "UPDATE plans SET 
+                    title=:t, price=:p, days=:d, description=:desc, is_featured=:if, 
+                    max_records=:mr, max_bots=:mb, color_theme=:ct 
+                    WHERE id=:id";
+
+            $this->db->query($sql);
+            $this->db->bind(':id', $id);
+            $this->db->bind(':t', $title);
+            $this->db->bind(':p', $price);
+            $this->db->bind(':d', $days);
+            $this->db->bind(':desc', $description);
+            $this->db->bind(':if', $is_featured);
+            $this->db->bind(':mr', $max_records);
+            $this->db->bind(':mb', $max_bots);
+            $this->db->bind(':ct', $color_theme);
+
+            $this->db->execute();
+            FlashMessage::set('تغییرات پلن ذخیره شد');
+            redirect('index.php?page=admin&action=plans');
+        }
+    }
+
+    public function delete_plan($id) {
+        $this->db->query("DELETE FROM plans WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+        FlashMessage::set('پلن حذف شد', 'warning');
+        redirect('index.php?page=admin&action=plans');
+    }
+
+    // =========================================================
+    // 3. مدیریت لایسنس‌ها (Licenses)
+    // =========================================================
+
+    public function licenses() {
+        try {
+            $sql = "SELECT L.*, U.name as user_name, U.email, P.title as plan_title 
+                    FROM user_licenses L 
+                    LEFT JOIN users U ON L.user_id = U.id 
+                    LEFT JOIN plans P ON L.plan_id = P.id 
+                    ORDER BY L.id DESC";
+            $this->db->query($sql);
+            $licenses = $this->db->fetchAll();
+        } catch (Exception $e) { $licenses = []; }
+
+        $this->view('admin/licenses/index', ['licenses' => $licenses]);
+    }
+
+    public function create_license_form() {
+        $this->db->query("SELECT id, name, email FROM users WHERE role != 'admin'");
+        $users = $this->db->fetchAll();
+
+        $this->db->query("SELECT * FROM plans WHERE is_active = 1");
+        $plans = $this->db->fetchAll();
+
+        $this->view('admin/licenses/create', ['users' => $users, 'plans' => $plans]);
+    }
+
+    public function store_license() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $user_id = $_POST['user_id'];
+            $plan_id = $_POST['plan_id'];
+
+            $this->db->query("SELECT * FROM plans WHERE id = :id");
+            $this->db->bind(':id', $plan_id);
+            $plan = $this->db->single();
+
+            if ($plan) {
+                $key = 'KEY-' . strtoupper(bin2hex(random_bytes(8)));
+                $expires = date('Y-m-d H:i:s', strtotime("+$plan->days days"));
+
+                $this->db->query("INSERT INTO user_licenses (user_id, plan_id, license_key, expires_at, status, created_at) 
+                                  VALUES (:u, :p, :k, :e, 'active', NOW())");
+                $this->db->bind(':u', $user_id);
+                $this->db->bind(':p', $plan_id);
+                $this->db->bind(':k', $key);
+                $this->db->bind(':e', $expires);
+                
+                $this->db->execute();
+                FlashMessage::set('لایسنس صادر شد');
+            }
+            redirect('index.php?page=admin&action=licenses');
+        }
+    }
+
+    public function delete_license($id) {
+        $this->db->query("DELETE FROM user_licenses WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+        redirect('index.php?page=admin&action=licenses');
+    }
+    
+public function getContractTemplatesAjax() {
+    // ۱. محدودسازی دسترسی
+    $this->auth->restrict(['admin', 'accountant']);
+
+    // ۲. پاکسازی کامل بافرهای خروجی قبلی جهت جلوگیری از نشت HTML
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $serviceType = sanitize($_GET['service_type'] ?? '');
+
+        if (empty($serviceType)) {
+            echo json_encode(['status' => 'error', 'clauses' => []], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        // ۳. کوئری دریافت الگوها از دیتابیس
+        $sql = "SELECT title, content FROM contract_templates 
+                WHERE service_type = :service_type OR service_type = 'common' 
+                ORDER BY sort_order ASC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':service_type', $serviceType);
+        $clauses = $this->db->fetchAll() ?? [];
+
+        echo json_encode([
+            'status' => 'success',
+            'clauses' => $clauses
+        ], JSON_UNESCAPED_UNICODE);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
+    }
+    
+    // ۴. توقف کامل اجرای اسکریپت
+    exit();
+}
 }

@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/Project.php';
 require_once __DIR__ . '/../models/Task.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Payroll.php';
+require_once __DIR__ . '/../models/Announcement.php';
 require_once __DIR__ . '/../core/Auth.php';
 require_once __DIR__ . '/../core/FlashMessage.php';
 require_once __DIR__ . '/../lib/JalaliDate.php';
@@ -23,6 +24,7 @@ class EmployeeController {
     private $taskModel;
     private $userModel;
     private $payrollModel;
+    private $announcementModel;
     private $user;
 
     public function __construct() {
@@ -37,6 +39,7 @@ class EmployeeController {
         $this->taskModel = new Task();
         $this->userModel = new User();
         $this->payrollModel = new Payroll();
+        $this->announcementModel = new Announcement();
         $this->user = $this->auth->user();
     }
 
@@ -57,10 +60,10 @@ class EmployeeController {
 
         if ($openSession) {
             $this->attendanceModel->clockOut($openSession->id, $ipAddress);
-            FlashMessage::set('message', 'خروج شما با موفقیت ثبت شد.');
+            FlashMessage::set('خروج شما با موفقیت ثبت شد.', 'success');
         } else {
             $this->attendanceModel->clockIn($this->user->id, $ipAddress);
-            FlashMessage::set('message', 'ورود شما با موفقیت ثبت شد.');
+            FlashMessage::set('ورود شما با موفقیت ثبت شد.', 'success');
         }
 
         redirect(APP_URL . '/index.php?page=employee&action=dashboard');
@@ -103,7 +106,7 @@ class EmployeeController {
             }
 
             if (empty($gregorianStartDate) || empty($gregorianEndDate) || empty($reason)) {
-                FlashMessage::set('message', 'لطفاً تمام فیلدهای لازم را به درستی پر کنید.', 'error');
+                FlashMessage::set('لطفاً تمام فیلدهای لازم را به درستی پر کنید.', 'error');
                 redirect(APP_URL . '/index.php?page=employee&action=leave_requests');
                 return;
             }
@@ -117,9 +120,9 @@ class EmployeeController {
             ];
             
             if ($this->leaveRequestModel->create($data)) {
-                FlashMessage::set('message', 'درخواست مرخصی شما با موفقیت ثبت شد.');
+                FlashMessage::set('درخواست مرخصی شما با موفقیت ثبت شد.', 'success');
             } else {
-                FlashMessage::set('message', 'خطا در ثبت درخواست.', 'error');
+                FlashMessage::set('خطا در ثبت درخواست.', 'error');
             }
             redirect(APP_URL . '/index.php?page=employee&action=leave_requests');
         }
@@ -141,7 +144,7 @@ class EmployeeController {
         $payroll = $this->payrollModel->findPayrollByIdWithDetails($id);
 
         if (!$payroll || $payroll->user_id != $userId) {
-            FlashMessage::set('message', 'شما به این صفحه دسترسی ندارید.', 'error');
+            FlashMessage::set('شما به این صفحه دسترسی ندارید.', 'error');
             redirect(APP_URL . '/index.php?page=employee&action=dashboard');
             return;
         }
@@ -189,17 +192,27 @@ class EmployeeController {
 
             if ($task && $task->assigned_to_user_id == $userId) {
                 if ($this->taskModel->updateStatus($taskId, $status)) {
-                    FlashMessage::set('message', 'وضعیت وظیفه با موفقیت به‌روزرسانی شد.');
+                    FlashMessage::set('وضعیت وظیفه با موفقیت به‌روزرسانی شد.', 'success');
                 } else {
-                    FlashMessage::set('message', 'خطا در به‌روزرسانی وظیفه.', 'error');
+                    FlashMessage::set('خطا در به‌روزرسانی وظیفه.', 'error');
                 }
             } else {
-                FlashMessage::set('message', 'شما اجازه تغییر این وظیفه را ندارید.', 'error');
+                FlashMessage::set('شما اجازه تغییر این وظیفه را ندارید.', 'error');
             }
             redirect_back();
         }
     }
-    
+
+    public function announcementsIndex() {
+        $announcements = $this->announcementModel->getAnnouncementsForRole('employee');
+
+        view('employee/announcements/index', [
+            'layout' => 'admin_layout',
+            'title' => 'اطلاعیه‌های سازمان',
+            'announcements' => $announcements
+        ]);
+    }
+
     public function showTrainingNeedsForm() {
         $userId = $this->auth->user()->id;
         $currentYear = jdate('Y');
@@ -221,14 +234,14 @@ class EmployeeController {
                 'weaknesses' => sanitize($_POST['weaknesses']),
             ];
             if ($this->trainingNeedModel->create($data)) {
-                FlashMessage::set('message', 'نیازسنجی شما با موفقیت ثبت شد.');
+                FlashMessage::set('نیازسنجی شما با موفقیت ثبت شد.', 'success');
             } else {
-                FlashMessage::set('message', 'خطا در ثبت نیازسنجی.', 'error');
+                FlashMessage::set('خطا در ثبت نیازسنجی.', 'error');
             }
             redirect(APP_URL . '/index.php?page=employee&action=dashboard');
         }
     }
-        
+
     public function showAssessmentForm() {
         $user = $this->auth->user();
         $currentYear = jdate('Y');
@@ -251,7 +264,7 @@ class EmployeeController {
             'peers' => $peers
         ]);
     }
-    
+
     public function storeAssessmentScore() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $evaluatorId = $this->auth->user()->id;
@@ -278,15 +291,15 @@ class EmployeeController {
             }
             
             if (empty($errors)) {
-                FlashMessage::set('message', 'ارزیابی شما با موفقیت ثبت شد.');
+                FlashMessage::set('ارزیابی شما با موفقیت ثبت شد.', 'success');
             } else {
-                FlashMessage::set('message', implode('<br>', $errors), 'error');
+                FlashMessage::set(implode('<br>', $errors), 'error');
             }
             
             redirect(APP_URL . '/index.php?page=employee&action=show_assessment_form');
         }
     }
-    
+
     public function viewAssessmentResults() {
         $user = $this->auth->user();
         $currentYear = jdate('Y');
@@ -300,7 +313,7 @@ class EmployeeController {
             'skills' => $this->getStandardSkills()
         ]);
     }
-    
+
     private function getStandardSkills() {
         return [
             'technical_skills' => 'مهارت‌های فنی',
@@ -334,7 +347,7 @@ class EmployeeController {
             $currentYear = jdate('Y');
             
             if ($this->skillAssessmentModel->hasAssessmentBeenSubmitted($userId, $currentYear, 'self')) {
-                FlashMessage::set('message', 'شما قبلاً خودارزیابی خود را برای این سال ثبت کرده‌اید.', 'warning');
+                FlashMessage::set('شما قبلاً خودارزیابی خود را برای این سال ثبت کرده‌اید.', 'warning');
                 redirect(APP_URL . '/index.php?page=employee&action=show_self_assessment_form');
                 return;
             }
@@ -349,14 +362,14 @@ class EmployeeController {
             ];
             
             if ($this->skillAssessmentModel->saveScores($data)) {
-                FlashMessage::set('message', 'خودارزیابی شما با موفقیت ثبت شد.');
+                FlashMessage::set('خودارزیابی شما با موفقیت ثبت شد.', 'success');
             } else {
-                FlashMessage::set('message', 'خطا در ثبت خودارزیابی.', 'error');
+                FlashMessage::set('خطا در ثبت خودارزیابی.', 'error');
             }
             redirect(APP_URL . '/index.php?page=employee&action=dashboard');
         }
     }
-    
+
     public function showPeerAssessmentForm() {
         $this->auth->restrict(['employee']);
         $skills = $this->getAssessmentSkills();
@@ -368,12 +381,25 @@ class EmployeeController {
         }
         
         if (!$targetEmployee) {
-             FlashMessage::set('message', 'کارمند مورد نظر یافت نشد.', 'error');
+            // چک کردن وجود متد قبل از فراخوانی جهت جلوگیری از Runtime Error
+            if (method_exists($this->userModel, 'getPeersByUserId')) {
+                $peers = $this->userModel->getPeersByUserId($this->auth->user()->id);
+                if (!empty($peers)) {
+                    $targetEmployee = reset($peers);
+                }
+            }
+        }
+
+        if (!$targetEmployee) {
+             FlashMessage::set('همکار مورد نظر جهت ارزیابی یافت نشد.', 'error');
              redirect(APP_URL . '/index.php?page=employee&action=dashboard');
              return;
         }
 
-        $isSubmitted = $this->skillAssessmentModel->hasAssessmentBeenSubmitted($employeeId, jdate('Y'), 'peer');
+        $isSubmitted = false;
+        if (method_exists($this->skillAssessmentModel, 'hasAssessmentBeenSubmitted')) {
+            $isSubmitted = $this->skillAssessmentModel->hasAssessmentBeenSubmitted($targetEmployee->id, jdate('Y'), 'peer');
+        }
         
         view('employee/training/assessments/peer_form', [
             'layout' => 'admin_layout',
@@ -401,14 +427,14 @@ class EmployeeController {
             ];
 
             if ($this->skillAssessmentModel->saveScores($data)) {
-                FlashMessage::set('message', 'ارزیابی شما با موفقیت ثبت شد.');
+                FlashMessage::set('ارزیابی شما با موفقیت ثبت شد.', 'success');
             } else {
-                FlashMessage::set('message', 'خطا در ثبت ارزیابی.', 'error');
+                FlashMessage::set('خطا در ثبت ارزیابی.', 'error');
             }
             redirect(APP_URL . '/index.php?page=employee&action=dashboard');
         }
     }
-    
+
     private function getAssessmentSkills() {
         return [
             'technical_skills' => 'مهارت‌های فنی',
@@ -417,7 +443,7 @@ class EmployeeController {
             'teamwork' => 'کار تیمی'
         ];
     }
-    
+
     public function toggleChecklistItem() {
         $this->auth->restrict(['employee']);
 
@@ -434,7 +460,7 @@ class EmployeeController {
             }
         }
     }
-    
+
     private function convertJalaliToGregorianString($jalaliDate) {
         if (empty($jalaliDate)) {
             return null;

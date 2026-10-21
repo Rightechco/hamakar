@@ -3,104 +3,152 @@
 global $auth;
 $sales = $sales ?? [];
 
-function getStatusBadgeColor($status) {
-    switch ($status) {
+function getSaleStatusBadgeDetails($status) {
+    switch (strtolower($status)) {
         case 'paid':
         case 'completed':
-            return 'success';
+            return ['bg' => 'bg-soft-success', 'text' => 'text-success', 'label' => 'تکمیل شده'];
         case 'pending':
-            return 'warning';
+            return ['bg' => 'bg-soft-warning', 'text' => 'text-warning', 'label' => 'در انتظار'];
         case 'canceled':
-            return 'danger';
+            return ['bg' => 'bg-soft-danger', 'text' => 'text-danger', 'label' => 'لغو شده'];
         default:
-            return 'secondary';
+            return ['bg' => 'bg-soft-secondary', 'text' => 'text-secondary', 'label' => $status ?: 'نامشخص'];
     }
 }
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-    .card-modern {
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    .bg-soft-success { background-color: #dcfce7; }
+    .text-success { color: #15803d !important; }
+    .bg-soft-warning { background-color: #fef3c7; }
+    .text-warning { color: #b45309 !important; }
+    .bg-soft-danger { background-color: #fee2e2; }
+    .text-danger { color: #b91c1c !important; }
+    .bg-soft-secondary { background-color: #f1f5f9; }
+    .text-secondary { color: #475569 !important; }
+
+    .ultra-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
     }
-    .table-responsive-modern {
+
+    .table-ultra-sale {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+
+    .table-ultra-sale tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         border-radius: 10px;
-        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
+
+    .table-ultra-sale tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
     }
-    .action-buttons .btn {
-        margin-right: 5px;
-        margin-bottom: 5px;
+
+    .table-ultra-sale td, .table-ultra-sale th {
+        padding: 1rem;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.08);
     }
 </style>
 
-<h1 class="h3 mb-4 text-gray-800">مدیریت فروش‌ها</h1>
-
-<?php FlashMessage::display(); ?>
-
-<div class="card card-modern mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
-        <h5 class="mb-0 text-primary">لیست فاکتورهای فروش</h5>
-        <a href="<?php echo APP_URL; ?>/index.php?page=sales&action=create" class="btn btn-primary btn-sm shadow-sm">
-            <i class="fas fa-plus fa-sm"></i> ثبت فروش جدید
+<div class="py-3" style="direction: rtl; font-family: 'Vazirmatn', sans-serif;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">مدیریت فاکتورهای فروش</h3>
+            <p class="text-muted small mb-0">لیست تمامی فاکتورهای فروش، وضعیت صادرشده و انتقال به حسابداری</p>
+        </div>
+        <a href="<?php echo APP_URL; ?>/index.php?page=sales&action=create" class="btn btn-success px-4 py-2 rounded-3 shadow-sm fw-medium">
+            <i class="fas fa-plus me-1"></i> ثبت فروش جدید
         </a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive table-responsive-modern">
-            <table class="table table-hover table-striped" width="100%" cellspacing="0">
+
+    <?php FlashMessage::display(); ?>
+
+    <div class="ultra-card p-4">
+        <div class="table-responsive">
+            <table class="table table-ultra-sale align-middle">
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>مشتری</th>
+                    <tr class="text-muted small text-uppercase">
+                        <th>شماره فاکتور</th>
+                        <th>نام مشتری</th>
                         <th>تاریخ فروش</th>
-                        <th>مبلغ کل</th>
+                        <th>مبلغ کل (تومان)</th>
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="text-end">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($sales)): ?>
                         <?php foreach ($sales as $sale): ?>
+                            <?php $badge = getSaleStatusBadgeDetails($sale->status ?? ''); ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($sale->id ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($sale->client_name ?? 'نامشخص'); ?></td>
+                                <td class="fw-bold text-secondary">#<?php echo htmlspecialchars($sale->id ?? ''); ?></td>
                                 <td>
+                                    <div class="fw-bold text-dark"><?php echo htmlspecialchars($sale->client_name ?? 'نامشخص'); ?></div>
+                                </td>
+                                <td class="text-muted">
+                                    <i class="far fa-calendar me-1"></i>
                                     <?php
                                         echo ($sale->sale_date ?? '') ?
                                              htmlspecialchars(jdate('Y/m/d', strtotime($sale->sale_date))) :
                                              'نامشخص';
                                     ?>
                                 </td>
-                                <td><?php echo number_format($sale->total_amount ?? 0); ?></td>
+                                <td class="fw-bold text-dark"><?php echo number_format($sale->total_amount ?? 0); ?></td>
                                 <td>
-                                    <?php
-                                    $status = $sale->status ?? 'unknown';
-                                    $badgeColor = getStatusBadgeColor($status);
-                                    ?>
-                                    <span class="badge bg-<?php echo $badgeColor; ?>"><?php echo htmlspecialchars($status); ?></span>
+                                    <span class="badge <?php echo $badge['bg'] . ' ' . $badge['text']; ?> px-3 py-2 rounded-pill fw-medium">
+                                        <?php echo htmlspecialchars($badge['label']); ?>
+                                    </span>
                                 </td>
-                                <td>
-                                    <div class="btn-group action-buttons" role="group">
-                                        <a href="<?php echo APP_URL; ?>/index.php?page=sales&action=view&id=<?php echo htmlspecialchars($sale->id ?? ''); ?>" class="btn btn-sm btn-info" title="مشاهده">
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="<?php echo APP_URL; ?>/index.php?page=sales&action=view&id=<?php echo htmlspecialchars($sale->id ?? ''); ?>" class="action-btn bg-soft-secondary text-secondary" title="مشاهده فاکتور">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <form action="<?php echo APP_URL; ?>/index.php?page=sales&action=updateStatus&id=<?php echo htmlspecialchars($sale->id ?? ''); ?>" method="POST" class="d-inline-block">
-                                            <input type="hidden" name="status" value="completed">
-                                            <?php if ($sale->status !== 'completed'): ?>
-                                                <button type="submit" class="btn btn-sm btn-success" title="تکمیل و ارسال به حسابداری" onclick="return confirm('آیا از تکمیل این فاکتور و ارسال به حسابداری اطمینان دارید؟');">
+                                        <?php if (($sale->status ?? '') !== 'completed'): ?>
+                                            <form action="<?php echo APP_URL; ?>/index.php?page=sales&action=updateStatus&id=<?php echo htmlspecialchars($sale->id ?? ''); ?>" method="POST" class="d-inline">
+                                                <input type="hidden" name="status" value="completed">
+                                                <button type="submit" class="action-btn bg-soft-success text-success border-0" title="تکمیل و ارسال به حسابداری" onclick="return confirm('آیا از تکمیل این فاکتور و ارسال به حسابداری اطمینان دارید؟');">
                                                     <i class="fas fa-check"></i>
                                                 </button>
-                                            <?php endif; ?>
-                                        </form>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">هیچ فاکتور فروشی یافت نشد.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-shopping-bag fa-3x mb-3 text-light"></i>
+                                <p class="mb-0">هیچ فاکتور فروشی ثبت نشده است.</p>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

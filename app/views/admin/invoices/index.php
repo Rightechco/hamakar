@@ -6,63 +6,126 @@ $clients = $clients ?? [];
 $filters = $filters ?? [];
 $invoiceTypes = $invoiceTypes ?? [];
 
-function getStatusBadgeColor($status) {
+function getInvoiceStatusBadgeDetails($status) {
     switch ($status) {
         case 'paid':
         case 'completed':
-            return 'success';
+            return ['bg' => 'bg-soft-success', 'text' => 'text-success', 'label' => 'پرداخت شده'];
         case 'pending':
-            return 'warning';
+            return ['bg' => 'bg-soft-warning', 'text' => 'text-warning', 'label' => 'در انتظار'];
         case 'overdue':
-            return 'danger';
+            return ['bg' => 'bg-soft-danger', 'text' => 'text-danger', 'label' => 'سررسید گذشته'];
         case 'canceled':
-            return 'secondary';
+            return ['bg' => 'bg-soft-secondary', 'text' => 'text-secondary', 'label' => 'لغو شده'];
         default:
-            return 'info';
+            return ['bg' => 'bg-soft-info', 'text' => 'text-info', 'label' => $status ?: 'نامشخص'];
     }
 }
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-    .card-modern {
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    :root {
+        --primary-indigo: #4f46e5;
+        --surface-bg: #ffffff;
+        --border-color: #e2e8f0;
     }
-    .table-responsive-modern {
+
+    body, .invoices-wrapper {
+        font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #0f172a;
+        direction: rtl;
+    }
+
+    .bg-soft-success { background-color: #dcfce7; }
+    .text-success { color: #15803d !important; }
+    .bg-soft-warning { background-color: #fef3c7; }
+    .text-warning { color: #b45309 !important; }
+    .bg-soft-danger { background-color: #fee2e2; }
+    .text-danger { color: #b91c1c !important; }
+    .bg-soft-secondary { background-color: #f1f5f9; }
+    .text-secondary { color: #475569 !important; }
+    .bg-soft-info { background-color: #e0f2fe; }
+    .text-info { color: #0369a1 !important; }
+
+    .ultra-card {
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Floating Row Table */
+    .table-ultra-invoice {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+        width: 100%;
+    }
+
+    .table-ultra-invoice tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         border-radius: 10px;
-        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .invoice-item-link {
-        font-weight: 600;
-        color: #343a40;
+
+    .table-ultra-invoice tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+    }
+
+    .table-ultra-invoice td, .table-ultra-invoice th {
+        padding: 1rem 1.25rem;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.08);
     }
 </style>
 
-<h1 class="h3 mb-4 text-gray-800">مدیریت فاکتورها</h1>
-
-<?php FlashMessage::display(); ?>
-
-<div class="card card-modern mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
-        <h5 class="mb-0 text-primary">لیست فاکتورها</h5>
-        <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices_create" class="btn btn-success btn-sm">
-
-            <i class="fas fa-plus"></i> افزودن فاکتور جدید
+<div class="invoices-wrapper py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">مدیریت فاکتورها</h3>
+            <p class="text-muted small mb-0">لیست کلیه فاکتورهای فروش، خرید، قراردادها و وضعیت تسویه</p>
+        </div>
+        <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices_create" class="btn btn-primary px-4 py-2 rounded-3 shadow-sm fw-medium">
+            <i class="fas fa-plus me-1"></i> صدور فاکتور جدید
         </a>
     </div>
-    <div class="card-body">
+
+    <?php FlashMessage::display(); ?>
+
+    <div class="ultra-card p-4">
+        <!-- Filter Form -->
         <form id="filter-form" class="mb-4 p-3 border rounded-3 bg-light" action="<?php echo APP_URL; ?>/index.php" method="GET">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="action" value="invoices">
-            <div class="d-flex flex-wrap align-items-end gap-3">
-                <div class="flex-grow-1">
-                    <label for="search" class="form-label text-muted small">جستجو:</label>
-                    <input type="text" class="form-control form-control-sm" id="search" name="search" placeholder="شماره فاکتور یا نام مشتری" value="<?php echo htmlspecialchars($filters['search'] ?? ''); ?>">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="search" class="form-label text-muted small fw-medium">جستجو:</label>
+                    <input type="text" class="form-control" id="search" name="search" placeholder="شماره فاکتور یا نام خریدار..." value="<?php echo htmlspecialchars($filters['search'] ?? ''); ?>">
                 </div>
-                <div class="flex-grow-1">
-                    <label for="client_id" class="form-label text-muted small">مشتری/فروشنده:</label>
-                    <select class="form-select form-select-sm" id="client_id" name="client_id">
-                        <option value="">همه</option>
+                <div class="col-md-3">
+                    <label for="client_id" class="form-label text-muted small fw-medium">مشتری / فروشنده:</label>
+                    <select class="form-select" id="client_id" name="client_id">
+                        <option value="">همه اشخاص</option>
                         <?php foreach($clients as $client): ?>
                             <option value="<?php echo $client->id; ?>" <?php echo (isset($filters['client_id']) && $filters['client_id'] == $client->id) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($client->name); ?>
@@ -70,10 +133,10 @@ function getStatusBadgeColor($status) {
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="flex-grow-1">
-                    <label for="invoice_type" class="form-label text-muted small">نوع فاکتور:</label>
-                    <select class="form-select form-select-sm" id="invoice_type" name="invoice_type">
-                        <option value="">همه</option>
+                <div class="col-md-3">
+                    <label for="invoice_type" class="form-label text-muted small fw-medium">نوع فاکتور:</label>
+                    <select class="form-select" id="invoice_type" name="invoice_type">
+                        <option value="">همه انواع</option>
                         <?php foreach($invoiceTypes as $key => $label): ?>
                             <option value="<?php echo $key; ?>" <?php echo (isset($filters['invoice_type']) && $filters['invoice_type'] == $key) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($label); ?>
@@ -81,32 +144,34 @@ function getStatusBadgeColor($status) {
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-secondary btn-sm">اعمال فیلتر</button>
-                    <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices" class="btn btn-outline-secondary btn-sm">پاک کردن فیلتر</a>
+                <div class="col-md-3 text-end">
+                    <button type="submit" class="btn btn-primary px-3 me-1">اعمال</button>
+                    <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices" class="btn btn-outline-secondary px-3">پاک کردن</a>
                 </div>
             </div>
         </form>
 
-        <div class="table-responsive table-responsive-modern">
-            <table class="table table-hover table-striped" width="100%" cellspacing="0">
+        <!-- Invoices Table -->
+        <div class="table-responsive">
+            <table class="table table-ultra-invoice align-middle">
                 <thead>
-                    <tr>
+                    <tr class="text-muted small text-uppercase">
                         <th>شماره فاکتور</th>
-                        <th>مشتری/فروشنده</th>
+                        <th>طرف حساب</th>
                         <th>نوع</th>
-                        <th>مربوط به</th>
+                        <th>شرح / مربوط به</th>
                         <th>تاریخ</th>
-                        <th>مبلغ کل</th>
+                        <th>مبلغ کل (تومان)</th>
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="text-end">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($invoices)): ?>
                         <?php foreach ($invoices as $invoice): ?>
+                            <?php $badge = getInvoiceStatusBadgeDetails($invoice->status ?? ''); ?>
                             <tr>
-                                <td>
+                                <td class="fw-bold">
                                     <?php
                                     $link = '';
                                     $number = '';
@@ -121,20 +186,21 @@ function getStatusBadgeColor($status) {
                                         $number = 'خرید #' . htmlspecialchars($invoice->id);
                                     }
                                     ?>
-                                    <a href="<?php echo $link; ?>" class="invoice-item-link"><?php echo $number; ?></a>
+                                    <a href="<?php echo $link; ?>" class="text-decoration-none text-primary fw-bold"><?php echo $number; ?></a>
                                 </td>
-                                <td><?php echo htmlspecialchars($invoice->client_name ?? 'نامشخص'); ?></td>
+                                <td><div class="fw-bold text-dark"><?php echo htmlspecialchars($invoice->client_name ?? 'نامشخص'); ?></div></td>
                                 <td>
-                                    <?php 
-                                        if ($invoice->type === 'contract') echo 'قرارداد';
-                                        elseif ($invoice->type === 'sale') echo 'فروش';
-                                        elseif ($invoice->type === 'purchase') echo 'خرید';
-                                        else echo 'نامشخص';
-                                    ?>
+                                    <span class="badge bg-soft-secondary text-secondary px-2.5 py-1 rounded-2">
+                                        <?php 
+                                            if ($invoice->type === 'contract') echo 'قرارداد';
+                                            elseif ($invoice->type === 'sale') echo 'فروش';
+                                            elseif ($invoice->type === 'purchase') echo 'خرید';
+                                            else echo 'نامشخص';
+                                        ?>
+                                    </span>
                                 </td>
-                                <td>
+                                <td class="text-muted small">
                                     <?php
-                                        // ✅ منطق جدید برای ستون "مربوط به"
                                         if ($invoice->type === 'sale') {
                                             echo 'فروش کالا به ' . htmlspecialchars($invoice->client_name ?? '---');
                                         } elseif ($invoice->type === 'purchase') {
@@ -144,15 +210,22 @@ function getStatusBadgeColor($status) {
                                         }
                                     ?>
                                 </td>
-                                <td><?php echo jdate('Y/m/d', strtotime($invoice->date)); ?></td>
-                                <td><?php echo number_format($invoice->total_amount); ?></td>
-                                <td><span class="badge bg-<?php echo getStatusBadgeColor($invoice->status); ?>"><?php echo htmlspecialchars($invoice->status); ?></span></td>
+                                <td class="text-muted small">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    <?php echo jdate('Y/m/d', strtotime($invoice->date)); ?>
+                                </td>
+                                <td class="fw-bold text-dark"><?php echo number_format($invoice->total_amount); ?></td>
                                 <td>
-                                    <div class="btn-group" role="group">
+                                    <span class="badge <?php echo $badge['bg'] . ' ' . $badge['text']; ?> px-3 py-1.5 rounded-pill fw-medium">
+                                        <?php echo htmlspecialchars($badge['label']); ?>
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
                                         <?php 
                                         $viewAction = '';
                                         $deleteAction = '';
-                                        $page = 'admin'; // پیش‌فرض
+                                        $page = 'admin';
 
                                         if ($invoice->type === 'contract') {
                                             $viewAction = 'view_invoice';
@@ -168,13 +241,13 @@ function getStatusBadgeColor($status) {
                                         }
                                         ?>
                                         <?php if (!empty($viewAction)): ?>
-                                            <a href="<?php echo APP_URL; ?>/index.php?page=<?php echo $page; ?>&action=<?php echo $viewAction; ?>&id=<?php echo htmlspecialchars($invoice->id); ?>" class="btn btn-sm btn-info" title="مشاهده">
+                                            <a href="<?php echo APP_URL; ?>/index.php?page=<?php echo $page; ?>&action=<?php echo $viewAction; ?>&id=<?php echo htmlspecialchars($invoice->id); ?>" class="action-btn bg-soft-info text-info" title="مشاهده">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         <?php endif; ?>
                                         <?php if (!empty($deleteAction) && $auth->hasRole(['admin', 'accountant'])): ?>
-                                            <form action="<?php echo APP_URL; ?>/index.php?page=<?php echo $page; ?>&action=<?php echo $deleteAction; ?>&id=<?php echo htmlspecialchars($invoice->id); ?>" method="POST" class="d-inline-block">
-                                                <button type="submit" class="btn btn-sm btn-danger" title="حذف" onclick="return confirm('آیا از حذف این فاکتور اطمینان دارید؟');">
+                                            <form action="<?php echo APP_URL; ?>/index.php?page=<?php echo $page; ?>&action=<?php echo $deleteAction; ?>&id=<?php echo htmlspecialchars($invoice->id); ?>" method="POST" class="d-inline">
+                                                <button type="submit" class="action-btn bg-soft-danger text-danger border-0" title="حذف" onclick="return confirm('آیا از حذف این فاکتور اطمینان دارید؟');">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                             </form>
@@ -185,7 +258,10 @@ function getStatusBadgeColor($status) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">هیچ فاکتوری یافت نشد.</td>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-file-invoice fa-3x mb-3 text-light"></i>
+                                <p class="mb-0">هیچ فاکتوری یافت نشد.</p>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -193,138 +269,3 @@ function getStatusBadgeColor($status) {
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    function getUrlParameter(name) {
-        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-        var results = regex.exec(location.search);
-        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-    };
-    
-    function toJalali(date) {
-        if (!date) return '---';
-        const jalaliDate = new persianDate(new Date(date));
-        return jalaliDate.format('YYYY/MM/DD');
-    }
-
-    const form = document.getElementById('filter-form');
-    const searchInput = document.getElementById('search');
-    const clientSelect = document.getElementById('client_id');
-    const invoiceTypeSelect = document.getElementById('invoice_type');
-    const tableBody = document.querySelector('.table tbody');
-    const url = '<?php echo APP_URL; ?>/index.php';
-
-    const applyFilters = () => {
-        const params = new URLSearchParams({
-            page: 'admin',
-            action: 'invoices_ajax',
-            search: searchInput.value,
-            client_id: clientSelect.value,
-            invoice_type: invoiceTypeSelect.value
-        });
-
-        fetch(url + '?' + params.toString(), {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            tableBody.innerHTML = '';
-            if (data.length > 0) {
-                data.forEach(invoice => {
-                    const statusBadgeColor = getStatusBadgeColor(invoice.status);
-                    
-                    let viewLink = '';
-                    let deleteLink = '';
-                    let invoiceNumber = '';
-                    let relatedTo = '';
-
-                    // ✅ منطق PHP برای تعیین اکشن‌ها و شماره فاکتور
-                    let page = 'admin';
-                    if (invoice.type === 'contract') {
-                        viewLink = `${url}?page=admin&action=view_invoice&id=${invoice.id}`;
-                        deleteLink = `${url}?page=admin&action=invoices_delete&id=${invoice.id}`;
-                        invoiceNumber = invoice.invoice_number;
-                        relatedTo = invoice.contract_title || '---';
-
-                    } else if (invoice.type === 'sale') {
-                        page = 'sales';
-                        viewLink = `${url}?page=sales&action=view&id=${invoice.id}`;
-                        deleteLink = `${url}?page=sales&action=delete&id=${invoice.id}`;
-                        invoiceNumber = `فروش #${invoice.id}`;
-                        relatedTo = `فروش کالا به ${invoice.client_name || '---'}`;
-                    } else if (invoice.type === 'purchase') {
-                        page = 'purchases';
-                        viewLink = `${url}?page=purchases&action=view&id=${invoice.id}`;
-                        deleteLink = `${url}?page=purchases&action=delete&id=${invoice.id}`;
-                        invoiceNumber = `خرید #${invoice.id}`;
-                        relatedTo = `خرید کالا از ${invoice.client_name || '---'}`;
-                    }
-
-                    const row = `
-                        <tr>
-                            <td><a href="${viewLink}" class="invoice-item-link">${invoiceNumber}</a></td>
-                            <td>${invoice.client_name || 'نامشخص'}</td>
-                            <td>${invoice.type === 'contract' ? 'قرارداد' : (invoice.type === 'sale' ? 'فروش' : 'خرید')}</td>
-                            <td>${relatedTo}</td>
-                            <td>${toJalali(invoice.date)}</td>
-                            <td>${new Intl.NumberFormat().format(invoice.total_amount)}</td>
-                            <td><span class="badge bg-${statusBadgeColor}">${invoice.status}</span></td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="${viewLink}" class="btn btn-sm btn-info" title="مشاهده">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <form action="${deleteLink}" method="POST" class="d-inline-block">
-                                        <button type="submit" class="btn btn-sm btn-danger" title="حذف" onclick="return confirm('آیا از حذف این فاکتور اطمینان دارید؟');">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += row;
-                });
-            } else {
-                tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">هیچ فاکتوری یافت نشد.</td></tr>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">خطا در بارگذاری اطلاعات.</td></tr>`;
-        });
-    };
-
-    // گوش دادن به تغییرات فیلدها و کلیک دکمه
-    searchInput.addEventListener('input', () => {
-        clearTimeout(window.searchTimeout);
-        window.searchTimeout = setTimeout(applyFilters, 500); // 500 میلی‌ثانیه تأخیر
-    });
-    document.querySelectorAll('#filter-form select').forEach(select => {
-        select.addEventListener('change', applyFilters);
-    });
-    
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData);
-        history.pushState(null, '', '?' + params.toString());
-        applyFilters();
-    });
-    
-    // فعال‌سازی datepicker
-    $('.persian-datepicker').persianDatepicker({
-        format: 'YYYY-MM-DD',
-        altField: '.alt-datepicker-gregorian',
-        autoClose: true,
-        onSelect: function(date) {
-            applyFilters();
-        }
-    });
-});
-</script>

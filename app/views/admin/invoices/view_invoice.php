@@ -1,25 +1,20 @@
 <?php
 // app/views/admin/invoices/view_invoice.php
 
-// بارگذاری کلاس JalaliDate (اگرچه ممکن است در index.php باشد، برای اطمینان در ویوهای مهم قرار داده می‌شود)
-// اگر این خط باعث خطای "Class already defined" شد، آن را حذف کنید.
-// require_once __DIR__ . '/../../lib/JalaliDate.php';
-
-// آماده‌سازی متغیرها برای استفاده در ویو
 $invoice = $invoice ?? null;
 $items = $items ?? [];
 
 $status_map = [
-    'paid' => ['text' => 'پرداخت شده', 'color' => 'success'],
-    'pending' => ['text' => 'در انتظار پرداخت', 'color' => 'warning'],
-    'partial' => ['text' => 'پرداخت جزئی', 'color' => 'info'],
-    'overdue' => ['text' => 'سررسید گذشته', 'color' => 'danger'],
-    'canceled' => ['text' => 'لغو شده', 'color' => 'secondary'],
+    'paid' => ['text' => 'پرداخت شده', 'bg' => '#dcfce7', 'color' => '#15803d'],
+    'pending' => ['text' => 'در انتظار پرداخت', 'bg' => '#fef3c7', 'color' => '#b45309'],
+    'partial' => ['text' => 'پرداخت جزئی', 'bg' => '#e0f2fe', 'color' => '#0369a1'],
+    'overdue' => ['text' => 'سررسید گذشته', 'bg' => '#fee2e2', 'color' => '#b91c1c'],
+    'canceled' => ['text' => 'لغو شده', 'bg' => '#f1f5f9', 'color' => '#475569'],
 ];
-$current_status = $status_map[$invoice->status] ?? ['text' => 'نامشخص', 'color' => 'secondary'];
+$current_status = $status_map[$invoice->status ?? ''] ?? ['text' => 'نامشخص', 'bg' => '#f1f5f9', 'color' => '#475569'];
 
 if (!$invoice) {
-    echo '<div class="alert alert-danger">فاکتور مورد نظر یافت نشد.</div>';
+    echo '<div class="alert alert-danger border-0 shadow-sm rounded-3">فاکتور مورد نظر یافت نشد.</div>';
     return;
 }
 
@@ -29,319 +24,244 @@ $sellerInfo = [
     'address' => 'تبریز، بلوار آزادی، جنب شهرداری منطقه ۳',
     'economic_code' => '۱۴۰۰۹۱۵۶۳۲۱',
     'registration_number' => '۵۵۲۰۰',
-    'logo_path' => APP_URL . '/assets/img/company_logo.png', // فرض بر وجود مسیر لوگو
+    'logo_path' => APP_URL . '/assets/img/company_logo.png',
 ];
 
-$issueDateJalali = $invoice->issue_date ? jdate('Y/m/d', strtotime($invoice->issue_date)) : '---';
-$dueDateJalali = $invoice->due_date ? jdate('Y/m/d', strtotime($invoice->due_date)) : '---';
+$issueDateJalali = !empty($invoice->issue_date) ? jdate('Y/m/d', strtotime($invoice->issue_date)) : '---';
+$dueDateJalali = !empty($invoice->due_date) ? jdate('Y/m/d', strtotime($invoice->due_date)) : '---';
 
-// بازیابی مبالغ از مدل (استفاده از مقادیر صفر پیش‌فرض برای جلوگیری از خطای PHP)
 $subtotal = $invoice->subtotal ?? 0;
 $vatRate = $invoice->vat_rate ?? 0;
 $vatAmount = $invoice->vat_amount ?? 0;
 $totalAmount = $invoice->total_amount ?? 0;
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-    @font-face {
-        font-family: 'B Homa';
-        src: url('<?php echo APP_URL; ?>/assets/fonts/BHoma.eot');
-        src: url('<?php echo APP_URL; ?>/assets/fonts/BHoma.eot?#iefix') format('embedded-opentype'),
-        url('<?php echo APP_URL; ?>/assets/fonts/BHoma.woff2') format('woff2'),
-        url('<?php echo APP_URL; ?>/assets/fonts/BHoma.woff') format('woff'),
-        url('<?php echo APP_URL; ?>/assets/fonts/BHoma.ttf') format('truetype');
-        font-weight: normal;
-        font-style: normal;
+    :root {
+        --primary-indigo: #4f46e5;
+        --surface-bg: #ffffff;
+        --border-color: #e2e8f0;
     }
-    @import url('https://cdn.jsdelivr.net/font-face/vazir-fd/vazir-fd.css');
-    body, h1, h2, h3, h4, h5, h6, p, a, span, table {
-        font-family: 'Vazir FD', 'B Homa', Tahoma, sans-serif !important;
-        color: #333;
+
+    body, .view-invoice-wrapper {
+        font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #0f172a;
+        direction: rtl;
     }
-    .invoice-card {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        padding: 20px;
+
+    .invoice-card-ultra {
+        max-width: 880px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        padding: 40px;
     }
-    .invoice-main-header {
-        display: flex;
-        justify-content: space-between;
+
+    .status-pill {
+        display: inline-flex;
         align-items: center;
-        margin-bottom: 20px;
+        padding: 6px 16px;
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        font-weight: 600;
     }
-    .invoice-main-header .title {
-        font-size: 1.5rem;
-        font-weight: bold;
+
+    .info-box-ultra {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #f1f5f9;
+        height: 100%;
     }
-    .invoice-meta {
-        text-align: left;
-    }
-    .invoice-meta p {
-        margin: 0;
-        font-size: 0.9rem;
-    }
-    .invoice-split-box {
-        display: flex;
-        border: 1px solid #000;
-        margin-bottom: 20px;
-    }
-    .box-left, .box-right {
-        flex: 1;
-        padding: 10px;
-        position: relative;
-    }
-    .box-left {
-        border-left: 1px solid #000;
-        text-align: right;
-    }
-    .box-right {
-        text-align: right;
-    }
-    .box-vertical-title {
-        position: absolute;
-        top: 50%;
-        left: -15px;
-        transform: rotate(90deg) translate(-50%, 0);
-        transform-origin: 0 0;
-        font-size: 14px;
-        font-weight: bold;
-        background-color: #000;
-        color: #fff;
-        padding: 5px 10px;
-    }
-    .box-title {
-        font-size: 1rem;
-        font-weight: bold;
-        color: #000;
-        margin-bottom: 5px;
-        padding-right: 20px;
-    }
-    .box-content {
-        font-size: 0.8rem;
-    }
-    .table-invoice {
+
+    .table-ultra-invoice {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-ultra-invoice th {
+        background-color: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 14px 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-ultra-invoice td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
         font-size: 0.9rem;
-        margin-bottom: 20px;
     }
-    .table-invoice thead th {
-        background-color: #000;
-        color: #fff;
-        font-weight: normal;
-        padding: 8px;
-        border: 1px solid #000;
+
+    .ultra-card {
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
     }
-    .table-invoice tbody td {
-        border: 1px solid #ddd;
-        padding: 8px;
-    }
-    .table-invoice tfoot td {
-        background-color: #f8f9fa;
-        font-weight: bold;
-        border: 1px solid #ddd;
-        padding: 8px;
-    }
-    .invoice-summary-minimal {
-        width: 40%;
-        margin-right: auto;
-    }
-    .invoice-summary-minimal .summary-item {
-        display: flex;
-        justify-content: space-between;
-    }
-    .invoice-summary-minimal .summary-item.total {
-        background-color: #f0f8ff;
-        padding: 8px;
-        font-size: 1.1rem;
-    }
-    .invoice-footer-minimal {
-        margin-top: 30px;
-        border-top: 1px dashed #ddd;
-        padding-top: 20px;
-    }
-    .no-print {
-        display: block;
-    }
+
     @media print {
-        @page {
-            size: A5 landscape;
-            margin: 0;
-        }
-        body {
-            font-size: 10px !important;
-            background-color: #fff !important;
-            margin: 0;
-        }
-        .container {
-            width: 100% !important;
-            padding: 10mm !important;
-        }
-        .no-print {
-            display: none !important;
-        }
-        .invoice-card {
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-        }
-        .invoice-header-minimal {
-            flex-direction: row;
-            border-bottom: 1px solid #000;
-        }
-        .invoice-header-minimal .logo {
-            max-width: 80px;
-        }
-        .invoice-header-minimal .invoice-title {
-            font-size: 1.5rem;
-        }
-        .invoice-split-box {
-            border: 1px solid #000;
-        }
-        .box-title {
-            font-size: 0.9rem;
-        }
-        .box-vertical-title {
-            font-size: 12px;
-            padding: 3px 8px;
-        }
-        .table-invoice th, .table-invoice td {
-            font-size: 8px;
-            padding: 4px;
-        }
-        .invoice-summary-minimal {
-            width: 100%;
-        }
+        .no-print { display: none !important; }
+        body { background: #fff !important; }
+        .invoice-card-ultra { border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; }
     }
 </style>
 
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-        <h1 class="h3 text-gray-800">مشاهده فاکتور</h1>
-        <div class="d-flex gap-2">
-            <a href="javascript:window.print()" class="btn btn-primary btn-sm">
-                <i class="fas fa-print"></i> چاپ
+<div class="view-invoice-wrapper py-3">
+    <!-- Action Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print mx-auto" style="max-width: 880px;">
+        <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices" class="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-medium">
+            <i class="fas fa-arrow-right me-1"></i> بازگشت
+        </a>
+
+        <div class="d-flex align-items-center gap-2">
+            <a href="javascript:window.print()" class="btn btn-primary rounded-pill px-4 btn-sm fw-medium shadow-sm">
+                <i class="fas fa-print me-1"></i> چاپ فاکتور
             </a>
-            <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=editInvoice&id=<?php echo htmlspecialchars($invoice->id); ?>" class="btn btn-warning btn-sm">
-                <i class="fas fa-edit"></i> ویرایش
-            </a>
-            <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i> بازگشت
+            <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=editInvoice&id=<?php echo htmlspecialchars($invoice->id); ?>" class="btn btn-warning rounded-pill px-4 btn-sm fw-medium text-dark">
+                <i class="fas fa-edit me-1"></i> ویرایش
             </a>
         </div>
     </div>
     
     <?php FlashMessage::display(); ?>
 
-    <div class="invoice-card">
-        <div class="invoice-main-header">
+    <!-- Printable Invoice Sheet -->
+    <div class="invoice-card-ultra">
+        <div class="d-flex justify-content-between align-items-center pb-4 mb-4 border-bottom">
             <div class="d-flex align-items-center gap-3">
-                <img src="<?php echo htmlspecialchars($sellerInfo['logo_path'] ?? ''); ?>" alt="Company Logo" class="logo">
-                <h5 class="title">فاکتور فروش</h5>
+                <img src="<?php echo htmlspecialchars($sellerInfo['logo_path'] ?? ''); ?>" alt="Logo" style="max-height: 55px;" class="rounded-2">
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">فاکتور رسمی فروش</h4>
+                    <span class="status-pill" style="background-color: <?php echo $current_status['bg']; ?>; color: <?php echo $current_status['color']; ?>;">
+                        <?php echo htmlspecialchars($current_status['text']); ?>
+                    </span>
+                </div>
             </div>
-            <div class="invoice-meta text-left">
-                <p>شماره: <?php echo htmlspecialchars($invoice->invoice_number); ?></p>
-                <p>تاریخ: <?php echo htmlspecialchars($issueDateJalali); ?></p>
-                <p>وضعیت: <span class="badge bg-<?php echo htmlspecialchars($current_status['color']); ?>"><?php echo htmlspecialchars($current_status['text']); ?></span></p>
+            <div class="text-end text-muted small">
+                <div class="mb-1">شماره فاکتور: <strong class="text-dark">#<?php echo htmlspecialchars($invoice->invoice_number); ?></strong></div>
+                <div class="mb-1">تاریخ صدور: <strong class="text-dark"><?php echo htmlspecialchars($issueDateJalali); ?></strong></div>
+                <div>تاریخ سررسید: <strong class="text-dark"><?php echo htmlspecialchars($dueDateJalali); ?></strong></div>
             </div>
         </div>
 
-        <div class="invoice-split-box">
-            <div class="box-right">
-                <h6 class="box-title">مشخصات خریدار</h6>
-                <div class="box-content">
-                    <p class="mb-1"><strong>نام:</strong> <?php echo htmlspecialchars($invoice->client_name ?? '---'); ?></p>
-                    <p class="mb-1"><strong>تلفن:</strong> <?php echo htmlspecialchars($invoice->client_phone ?? '---'); ?></p>
-                    <p class="mb-1"><strong>آدرس:</strong> <?php echo htmlspecialchars($invoice->client_address ?? '---'); ?></p>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="info-box-ultra">
+                    <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-user-check me-2"></i>مشخصات خریدار</h6>
+                    <div class="small lh-lg text-muted">
+                        <div>نام مشتری: <strong class="text-dark"><?php echo htmlspecialchars($invoice->client_name ?? '---'); ?></strong></div>
+                        <div>شماره تماس: <strong class="text-dark"><?php echo htmlspecialchars($invoice->client_phone ?? '---'); ?></strong></div>
+                        <div>نشانی: <strong class="text-dark"><?php echo htmlspecialchars($invoice->client_address ?? '---'); ?></strong></div>
+                    </div>
                 </div>
             </div>
-            <div class="box-left">
-                <h6 class="box-title">مشخصات فروشنده</h6>
-                <div class="box-content">
-                    <p class="mb-1"><strong>نام:</strong> <?php echo htmlspecialchars($sellerInfo['name']); ?></p>
-                    <p class="mb-1"><strong>تلفن:</strong> <?php echo htmlspecialchars($sellerInfo['phone']); ?></p>
-                    <p class="mb-1"><strong>آدرس:</strong> <?php echo htmlspecialchars($sellerInfo['address']); ?></p>
+            <div class="col-md-6">
+                <div class="info-box-ultra">
+                    <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-building me-2"></i>مشخصات فروشنده</h6>
+                    <div class="small lh-lg text-muted">
+                        <div>نام شرکت: <strong class="text-dark"><?php echo htmlspecialchars($sellerInfo['name']); ?></strong></div>
+                        <div>کد اقتصادی: <strong class="text-dark"><?php echo htmlspecialchars($sellerInfo['economic_code']); ?></strong></div>
+                        <div>تلفن: <strong class="text-dark"><?php echo htmlspecialchars($sellerInfo['phone']); ?></strong></div>
+                        <div>نشانی: <strong class="text-dark"><?php echo htmlspecialchars($sellerInfo['address']); ?></strong></div>
+                    </div>
                 </div>
-                <div class="box-vertical-title">فروشنده</div>
             </div>
         </div>
-        
-        <p class="mb-4"><strong>توضیحات فاکتور:</strong> <?php echo htmlspecialchars($invoice->description ?? '---'); ?></p>
 
-        <div class="table-responsive mt-4">
-    <table class="table table-bordered table-hover table-invoice">
-        <thead class="bg-light">
-            <tr>
-                <th>شرح</th>
-                <th>واحد</th>
-                <th>مقدار</th>
-                <th>مبلغ واحد (تومان)</th>
-                <th>مبلغ کل (تومان)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (is_array($items) && !empty($items)): ?>
-                <?php foreach ($items as $item): ?>
+        <?php if (!empty($invoice->description)): ?>
+            <div class="p-3 bg-light rounded-3 mb-4 small text-muted">
+                <strong class="text-dark me-1">توضیحات فاکتور:</strong> <?php echo htmlspecialchars($invoice->description); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Invoice Items Table -->
+        <div class="table-responsive mb-4">
+            <table class="table table-ultra-invoice align-middle">
+                <thead>
                     <tr>
-                        <td><?php echo htmlspecialchars($item->product_name ?? $item->service_name ?? '---'); ?></td>
-                        <td><?php echo htmlspecialchars($item->product_unit ?? '---'); ?></td>
-                        <td><?php echo number_format($item->quantity); ?></td>
-                        <td><?php echo number_format($item->price); ?></td>
-                        <td><?php echo number_format($item->quantity * $item->price); ?></td>
+                        <th>شرح کالا / خدمت</th>
+                        <th class="text-center">واحد</th>
+                        <th class="text-center">مقدار / تعداد</th>
+                        <th class="text-end">قیمت واحد (تومان)</th>
+                        <th class="text-end">مبلغ کل (تومان)</th>
                     </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="5" class="text-center">هیچ آیتمی در این فاکتور یافت نشد.</td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</div>
+                </thead>
+                <tbody>
+                    <?php if (is_array($items) && !empty($items)): ?>
+                        <?php foreach ($items as $item): ?>
+                            <tr>
+                                <td class="fw-bold text-dark"><?php echo htmlspecialchars($item->product_name ?? $item->service_name ?? '---'); ?></td>
+                                <td class="text-center text-muted small"><?php echo htmlspecialchars($item->product_unit ?? 'عدد'); ?></td>
+                                <td class="text-center fw-medium"><?php echo number_format($item->quantity); ?></td>
+                                <td class="text-end"><?php echo number_format($item->price); ?></td>
+                                <td class="text-end fw-bold text-dark"><?php echo number_format($item->quantity * $item->price); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">هیچ آیتمی در این فاکتور یافت نشد.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
 
+        <!-- Summary Calculation Box -->
         <div class="row justify-content-end">
             <div class="col-md-6">
-                <div class="invoice-total-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">جمع کل (بدون مالیات):</span>
-                        <span class="summary-value"><?php echo number_format($subtotal); ?></span>
+                <div class="bg-light p-3 rounded-3">
+                    <div class="d-flex justify-content-between mb-2 small text-muted">
+                        <span>جمع کل بدون مالیات:</span>
+                        <span class="fw-medium text-dark"><?php echo number_format($subtotal); ?> تومان</span>
                     </div>
-                    <div class="summary-item">
-                        <span class="summary-label">مالیات بر ارزش افزوده (VAT) (<?php echo number_format($vatRate); ?>%):</span>
-                        <span class="summary-value"><?php echo number_format($vatAmount); ?></span>
+                    <div class="d-flex justify-content-between mb-2 small text-muted">
+                        <span>مالیات بر ارزش افزوده (VAT <?php echo number_format($vatRate); ?>%):</span>
+                        <span class="fw-medium text-dark"><?php echo number_format($vatAmount); ?> تومان</span>
                     </div>
-                    <div class="total-summary">
-                        <div class="total-label">مبلغ قابل پرداخت:</div>
-                        <div class="total-value"><?php echo number_format($totalAmount); ?> تومان</div>
+                    <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2 text-primary fs-5">
+                        <span>مبلغ قابل پرداخت:</span>
+                        <span><?php echo number_format($totalAmount); ?> تومان</span>
                     </div>
                 </div>
             </div>
         </div>
-        <p class="text-center mt-3" style="font-size: 0.9rem;"><strong>مبلغ به حروف:</strong> <?php echo numberToWords($totalAmount); ?></p>
-        
-        <div class="row invoice-footer-minimal">
-            <div class="col-6 text-center">
-                <p><strong>امضاء خریدار</strong></p>
+
+        <?php if (function_exists('numberToWords')): ?>
+            <p class="text-center mt-3 small text-muted"><strong>مبلغ به حروف:</strong> <?php echo numberToWords($totalAmount); ?></p>
+        <?php endif; ?>
+
+        <!-- Signatures -->
+        <div class="row text-center mt-5 pt-4 text-muted border-top">
+            <div class="col-6">
+                <p class="mb-4 small fw-medium">مهر و امضاء خریدار</p>
+                <div style="border-bottom: 1px dashed #cbd5e1; width: 60%; margin: 0 auto;"></div>
             </div>
-            <div class="col-6 text-center">
-                <p><strong>امضاء فروشنده</strong></p>
+            <div class="col-6">
+                <p class="mb-4 small fw-medium">مهر و امضاء فروشنده</p>
+                <div style="border-bottom: 1px dashed #cbd5e1; width: 60%; margin: 0 auto;"></div>
             </div>
         </div>
 
-        <footer class="text-center text-muted mt-4" style="font-size: 0.8rem;">
-            <p>از اعتماد شما به شرکت رایان تکرو سپاسگزاریم.</p>
+        <footer class="text-center text-muted mt-4 small pt-3">
+            <p class="mb-0">از اعتماد شما به شرکت رایان تکرو سپاسگزاریم.</p>
         </footer>
     </div>
     
-    <div class="card p-4 mt-4 no-print">
-        <h5 class="mb-3">تغییر وضعیت فاکتور</h5>
+    <!-- Status Update Panel -->
+    <div class="ultra-card p-4 mt-4 no-print mx-auto" style="max-width: 880px;">
+        <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-sync-alt me-2 text-primary"></i>تغییر وضعیت فاکتور</h6>
         <form action="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices_update_status&id=<?php echo htmlspecialchars($invoice->id); ?>" method="POST">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="status" class="form-label">وضعیت جدید:</label>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label for="status" class="form-label small text-muted">انتخاب وضعیت جدید:</label>
                     <select class="form-select" id="status" name="status" required>
                         <?php foreach ($status_map as $key => $status_data): ?>
                             <option value="<?php echo $key; ?>" <?php echo ($invoice->status == $key) ? 'selected' : ''; ?>>
@@ -350,11 +270,10 @@ $totalAmount = $invoice->total_amount ?? 0;
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-md-6 d-flex align-items-end mb-3">
-                    <button type="submit" class="btn btn-primary">به‌روزرسانی وضعیت</button>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">به‌روزرسانی وضعیت</button>
                 </div>
             </div>
         </form>
     </div>
-
 </div>

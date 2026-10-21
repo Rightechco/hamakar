@@ -3,94 +3,136 @@
 global $auth;
 $purchases = $purchases ?? [];
 
-// Helper function to get badge color based on status
-function getStatusBadgeColor($status) {
+function getStatusBadgeDetails($status) {
     switch ($status) {
         case 'paid':
-            return 'success';
+            return ['bg' => 'bg-soft-success', 'text' => 'text-success', 'label' => 'پرداخت شده'];
         case 'pending':
-            return 'warning';
+            return ['bg' => 'bg-soft-warning', 'text' => 'text-warning', 'label' => 'در انتظار'];
         case 'canceled':
-            return 'danger';
+            return ['bg' => 'bg-soft-danger', 'text' => 'text-danger', 'label' => 'لغو شده'];
         default:
-            return 'secondary';
+            return ['bg' => 'bg-soft-secondary', 'text' => 'text-secondary', 'label' => 'نامشخص'];
     }
 }
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.min.css">
+
 <style>
-    .card-modern {
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    .bg-soft-success { background-color: #dcfce7; }
+    .text-success { color: #15803d !important; }
+    .bg-soft-warning { background-color: #fef3c7; }
+    .text-warning { color: #b45309 !important; }
+    .bg-soft-danger { background-color: #fee2e2; }
+    .text-danger { color: #b91c1c !important; }
+    .bg-soft-secondary { background-color: #f1f5f9; }
+    .text-secondary { color: #475569 !important; }
+
+    .ultra-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
     }
-    .table-responsive-modern {
+
+    .table-ultra {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+
+    .table-ultra tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         border-radius: 10px;
-        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
+
+    .table-ultra tbody tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
     }
-    .action-buttons .btn {
-        margin-right: 5px;
-        margin-bottom: 5px;
+
+    .table-ultra td, .table-ultra th {
+        padding: 1rem;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .action-btn {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.08);
     }
 </style>
 
-<h1 class="h3 mb-4 text-gray-800">مدیریت خریدها</h1>
-
-<?php FlashMessage::display(); ?>
-
-<div class="card card-modern mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
-        <h5 class="mb-0 text-primary">لیست فاکتورهای خرید</h5>
-        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=create" class="btn btn-primary btn-sm shadow-sm">
-            <i class="fas fa-plus fa-sm"></i> ثبت خرید جدید
+<div class="py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">مدیریت فاکتورهای خرید</h3>
+            <p class="text-muted small mb-0">لیست تمامی فاکتورها و وضعیت پرداخت آن‌ها</p>
+        </div>
+        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=create" class="btn btn-primary px-3 py-2 rounded-3 shadow-sm">
+            <i class="fas fa-plus me-1"></i> ثبت خرید جدید
         </a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive table-responsive-modern">
-            <table class="table table-hover table-striped" width="100%" cellspacing="0">
+
+    <?php FlashMessage::display(); ?>
+
+    <div class="ultra-card p-4">
+        <div class="table-responsive">
+            <table class="table table-ultra align-middle">
                 <thead>
-                    <tr>
-                        <th>#</th>
+                    <tr class="text-muted small text-uppercase">
+                        <th>شناسه</th>
                         <th>فروشنده</th>
                         <th>تاریخ خرید</th>
-                        <th>مبلغ کل</th>
+                        <th>مبلغ کل (تومان)</th>
                         <th>وضعیت</th>
-                        <th>عملیات</th>
+                        <th class="text-end">عملیات</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($purchases)): ?>
                         <?php foreach ($purchases as $purchase): ?>
+                            <?php $badge = getStatusBadgeDetails($purchase->status ?? ''); ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($purchase->id ?? ''); ?></td>
-                                <td><?php echo htmlspecialchars($purchase->vendor_name ?? 'نامشخص'); ?></td>
+                                <td class="fw-bold text-secondary">#<?php echo htmlspecialchars($purchase->id ?? ''); ?></td>
                                 <td>
+                                    <div class="fw-bold text-dark"><?php echo htmlspecialchars($purchase->vendor_name ?? 'نامشخص'); ?></div>
+                                </td>
+                                <td class="text-muted">
+                                    <i class="far fa-calendar me-1"></i>
                                     <?php 
                                         echo ($purchase->purchase_date ?? '') ? 
                                              htmlspecialchars(jdate('Y/m/d', strtotime($purchase->purchase_date))) : 
                                              'نامشخص';
                                     ?>
                                 </td>
-                                <td><?php echo number_format($purchase->total_amount ?? 0); ?></td>
+                                <td class="fw-bold"><?php echo number_format($purchase->total_amount ?? 0); ?></td>
                                 <td>
-                                    <?php
-                                    $status = $purchase->status ?? 'unknown';
-                                    $badgeColor = getStatusBadgeColor($status);
-                                    ?>
-                                    <span class="badge bg-<?php echo $badgeColor; ?>"><?php echo htmlspecialchars($status); ?></span>
+                                    <span class="badge <?php echo $badge['bg'] . ' ' . $badge['text']; ?> px-3 py-2 rounded-pill fw-medium">
+                                        <?php echo htmlspecialchars($badge['label']); ?>
+                                    </span>
                                 </td>
-                                <td>
-                                    <div class="btn-group action-buttons" role="group">
-                                        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=view&id=<?php echo htmlspecialchars($purchase->id ?? ''); ?>" class="btn btn-sm btn-info" title="مشاهده">
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=view&id=<?php echo htmlspecialchars($purchase->id ?? ''); ?>" class="action-btn bg-soft-secondary text-secondary" title="مشاهده">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=edit&id=<?php echo htmlspecialchars($purchase->id ?? ''); ?>" class="btn btn-sm btn-warning" title="ویرایش">
+                                        <a href="<?php echo APP_URL; ?>/index.php?page=purchases&action=edit&id=<?php echo htmlspecialchars($purchase->id ?? ''); ?>" class="action-btn bg-soft-warning text-warning" title="ویرایش">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="<?php echo APP_URL; ?>/index.php?page=purchases&action=delete&id=<?php echo htmlspecialchars($purchase->id ?? ''); ?>" method="POST" class="d-inline-block">
-                                            <button type="submit" class="btn btn-sm btn-danger" title="حذف" onclick="return confirm('آیا از حذف این فاکتور خرید اطمینان دارید؟');">
+                                        <form action="<?php echo APP_URL; ?>/index.php?page=purchases&action=delete&id=<?php echo htmlspecialchars($purchase->id ?? ''); ?>" method="POST" class="d-inline">
+                                            <button type="submit" class="action-btn bg-soft-danger text-danger border-0" title="حذف" onclick="return confirm('آیا از حذف این فاکتور اطمینان دارید؟');">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
@@ -100,7 +142,10 @@ function getStatusBadgeColor($status) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">هیچ فاکتور خریدی یافت نشد.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-receipt fa-3x mb-3 text-light"></i>
+                                <p class="mb-0">هیچ فاکتور خریدی ثبت نشده است.</p>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

@@ -1,188 +1,491 @@
 <?php
-// app/views/admin/dashboard.php - نسخه نهایی با طراحی مدرن و بخش اطلاعیه‌ها
+// app/views/admin/dashboard.php - نسخه نهایی اولترا پرمیوم و هوشمند
+$clientsCount = $clientsCount ?? 0;
+$contractsCount = $contractsCount ?? 0;
+$invoicesCount = $invoicesCount ?? 0;
+$announcements = $announcements ?? [];
 ?>
+
 <style>
-    .stat-card {
-        border-left: 4px solid;
-        border-radius: .35rem;
-        box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15);
-        transition: transform 0.2s ease-in-out;
+    :root {
+        --dash-card-bg: #ffffff;
+        --dash-text-main: #0f172a;
+        --dash-text-muted: #64748b;
+        --dash-border: #f1f5f9;
+        --dash-accent: #6366f1;
+        --dash-accent-hover: #4f46e5;
+        --dash-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
+        --dash-shadow-hover: 0 20px 35px -5px rgba(99, 102, 241, 0.12), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
     }
-    .stat-card:hover { transform: translateY(-3px); }
-    .stat-card .card-body { padding: 1.25rem; }
-    .stat-card .text-xs { font-size: .7rem; font-weight: 700; text-transform: uppercase; }
-    .stat-card .h5 { font-weight: 700; }
-    .stat-card i { font-size: 2rem; color: #dddfeb; }
-    .border-left-primary { border-left-color: #4e73df !important; }
-    .border-left-success { border-left-color: #1cc88a !important; }
-    .border-left-info { border-left-color: #36b9cc !important; }
-    .border-left-warning { border-left-color: #f6c23e !important; }
-    
-    /* استایل‌های جذاب برای اطلاعیه‌ها */
-    .announcement-card {
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+
+    /* Header Section */
+    .dash-header-title {
+        font-weight: 900;
+        color: var(--dash-text-main);
+        letter-spacing: -0.5px;
+        font-size: 1.65rem;
     }
-    .announcement-item {
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 15px;
-        transition: all 0.2s;
+
+    .live-pulse {
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse-green 2s infinite;
     }
-    .announcement-item:hover {
-        background-color: #e2e6ea;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+
+    @keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
-    .announcement-item .announcement-title {
-        font-weight: bold;
-        color: #34495e;
+
+    .btn-premium-action {
+        background: linear-gradient(135deg, var(--dash-accent) 0%, var(--dash-accent-hover) 100%);
+        color: #ffffff !important;
+        border: none;
+        border-radius: 14px;
+        padding: 0.7rem 1.4rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+        box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none !important;
+        cursor: pointer;
+    }
+    .btn-premium-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px -4px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Stat Cards Glassmorphism */
+    .premium-stat-card {
+        background: var(--dash-card-bg);
+        border-radius: 22px;
+        border: 1px solid var(--dash-border);
+        box-shadow: var(--dash-shadow);
+        padding: 1.5rem;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .premium-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 4px;
+        background: transparent;
+        transition: background 0.3s ease;
+    }
+    .premium-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--dash-shadow-hover);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+    .premium-stat-card.card-primary:hover::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .premium-stat-card.card-success:hover::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .premium-stat-card.card-info:hover::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .premium-stat-card.card-warning:hover::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .stat-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        transition: transform 0.35s ease;
+    }
+    .premium-stat-card:hover .stat-icon-wrapper {
+        transform: scale(1.12) rotate(-6deg);
+    }
+
+    .icon-bg-primary { background: #e0e7ff; color: #4f46e5; }
+    .icon-bg-success { background: #d1fae5; color: #059669; }
+    .icon-bg-info { background: #e0f2fe; color: #0284c7; }
+    .icon-bg-warning { background: #fef3c7; color: #d97706; }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--dash-text-muted);
+        margin-bottom: 0.4rem;
+    }
+    .stat-value {
+        font-size: 1.85rem;
+        font-weight: 900;
+        color: var(--dash-text-main);
+        line-height: 1;
+        font-family: monospace, 'Vazirmatn';
+    }
+
+    /* Container Boxes */
+    .premium-box {
+        background: var(--dash-card-bg);
+        border-radius: 24px;
+        border: 1px solid var(--dash-border);
+        box-shadow: var(--dash-shadow);
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+        transition: all 0.3s ease;
+    }
+    .premium-box-header {
+        padding: 1.25rem 1.6rem;
+        background: #ffffff;
+        border-bottom: 1px solid #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .premium-box-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--dash-text-main);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    /* Announcement Cards */
+    .announcement-card-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.25rem 1.4rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        border-right: 5px solid #6366f1;
+        position: relative;
+    }
+    .announcement-card-item:hover {
+        background: #ffffff;
+        box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.06);
+        border-color: #cbd5e1;
+        border-right-color: #4f46e5;
+        transform: translateX(-4px);
+    }
+    .announcement-card-item:last-child {
+        margin-bottom: 0;
+    }
+    .announcement-card-item .title {
+        font-size: 0.975rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
         display: block;
-        margin-bottom: 5px;
     }
-    .announcement-item .announcement-body {
-        color: #6c757d;
+    .announcement-card-item .body-text {
+        font-size: 0.875rem;
+        color: #475569;
+        line-height: 1.7;
+        margin-bottom: 0.75rem;
     }
-    .announcement-item .announcement-date {
+    .announcement-card-item .date-badge {
         font-size: 0.75rem;
-        color: #adb5bd;
+        font-weight: 600;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #ffffff;
+        padding: 0.3rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Activity Timeline */
+    .timeline-wrapper {
+        position: relative;
+        padding: 0.5rem 0;
+    }
+    .timeline-item {
+        position: relative;
+        padding-right: 2rem;
+        padding-bottom: 1.5rem;
+        border-right: 2px dashed #e2e8f0;
+    }
+    .timeline-item:last-child {
+        border-right-color: transparent;
+        padding-bottom: 0;
+    }
+    .timeline-dot {
+        position: absolute;
+        right: -7px;
+        top: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #6366f1;
+        outline: 4px solid #ffffff;
+        box-shadow: 0 0 0 1px #e2e8f0;
+    }
+    .timeline-content {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.4;
+    }
+    .timeline-time {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        display: block;
+        margin-top: 0.3rem;
+        font-weight: 500;
     }
 </style>
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">داشبورد</h1>
-    <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> تولید گزارش</a>
-</div>
-
-<div class="row">
-    <!-- کارت‌های آماری -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col me-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">مشتریان فعال</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $clientsCount ?? '0'; ?></div>
-                    </div>
-                    <div class="col-auto"><i class="fas fa-users"></i></div>
-                </div>
-            </div>
+<!-- Header Action Area -->
+<div class="d-flex align-items-center justify-content-between mb-4 pb-2 flex-wrap gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h1 class="dash-header-title mb-0">داشبورد مدیریتی</h1>
+            <span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-pill px-2.5 py-1 small fw-bold d-inline-flex align-items-center gap-1.5" style="background:#e0e7ff; color:#4338ca;">
+                <span class="live-pulse"></span>
+                بروزرسانی آنلاین
+            </span>
         </div>
+        <p class="text-muted small mb-0">خلاصه وضعیت کلی سامانه هماکار، گزارش مالی و عملکرد آنلاین سازمان</p>
     </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col me-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">قراردادهای فعال</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $contractsCount ?? '0'; ?></div>
-                    </div>
-                    <div class="col-auto"><i class="fas fa-file-signature"></i></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col me-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">پروژه‌های در حال انجام</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
-                    </div>
-                    <div class="col-auto"><i class="fas fa-tasks"></i></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col me-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">فاکتورهای پرداخت‌نشده</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $invoicesCount ?? '0'; ?></div>
-                    </div>
-                    <div class="col-auto"><i class="fas fa-file-invoice-dollar"></i></div>
-                </div>
-            </div>
-        </div>
+    
+    <div class="d-flex align-items-center gap-2">
+        <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=reports" class="btn btn-premium-action d-inline-flex align-items-center gap-2">
+            <i class="fas fa-chart-line"></i>
+            <span>گزارش جامع سیستم</span>
+        </a>
     </div>
 </div>
 
-<div class="row">
-    <!-- بخش اطلاعیه‌ها -->
-    <div class="col-lg-12 mb-4">
-        <div class="card shadow announcement-card">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">اطلاعیه‌ها و اخبار</h6>
+<!-- Stat Cards Row -->
+<div class="row g-3 mb-4">
+    <!-- مشتریان فعال -->
+    <div class="col-xl-3 col-md-6">
+        <div class="premium-stat-card card-primary">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">مشتریان فعال</div>
+                    <div class="stat-value"><?php echo number_format((int)$clientsCount); ?></div>
+                </div>
+                <div class="stat-icon-wrapper icon-bg-primary">
+                    <i class="fas fa-users"></i>
+                </div>
             </div>
-            <div class="card-body">
+        </div>
+    </div>
+
+    <!-- قراردادهای فعال -->
+    <div class="col-xl-3 col-md-6">
+        <div class="premium-stat-card card-success">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">قراردادهای فعال</div>
+                    <div class="stat-value"><?php echo number_format((int)$contractsCount); ?></div>
+                </div>
+                <div class="stat-icon-wrapper icon-bg-success">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- پروژه‌ها -->
+    <div class="col-xl-3 col-md-6">
+        <div class="premium-stat-card card-info">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">پروژه‌های در حال انجام</div>
+                    <div class="stat-value">5</div>
+                </div>
+                <div class="stat-icon-wrapper icon-bg-info">
+                    <i class="fas fa-diagram-project"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فاکتورهای پرداخت نشده -->
+    <div class="col-xl-3 col-md-6">
+        <div class="premium-stat-card card-warning">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">فاکتورهای معوق</div>
+                    <div class="stat-value"><?php echo number_format((int)$invoicesCount); ?></div>
+                </div>
+                <div class="stat-icon-wrapper icon-bg-warning">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcements Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="premium-box">
+            <div class="premium-box-header">
+                <h6 class="premium-box-title">
+                    <i class="fas fa-bullhorn" style="color:#6366f1;"></i>
+                    <span>اطلاعیه‌ها و اخبار سازمان</span>
+                </h6>
+                <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=announcements_index" class="text-decoration-none small fw-bold text-indigo-600" style="color: #6366f1;">مدیریت اطلاعیه‌ها <i class="fas fa-arrow-left ms-1"></i></a>
+            </div>
+            <div class="p-3 p-md-4">
                 <?php if (!empty($announcements)): ?>
                     <?php foreach ($announcements as $announcement): ?>
-                        <div class="announcement-item">
-                            <span class="announcement-title"><?php echo htmlspecialchars($announcement->title); ?></span>
-                            <div class="announcement-body">
-                                <?php echo $announcement->body; ?>
+                        <div class="announcement-card-item">
+                            <span class="title"><?php echo htmlspecialchars($announcement->title ?? ''); ?></span>
+                            <div class="body-text">
+                                <?php echo nl2br(htmlspecialchars($announcement->body ?? '')); ?>
                             </div>
-                            <span class="announcement-date">تاریخ انتشار: <?php echo jdate('Y/m/d H:i', strtotime($announcement->created_at)); ?></span>
+                            <div class="date-badge">
+                                <i class="far fa-clock"></i>
+                                <span>زمان انتشار: <?php echo !empty($announcement->created_at) ? jdate('Y/m/d H:i', strtotime($announcement->created_at)) : 'نامشخص'; ?></span>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="alert alert-light text-center" role="alert">
-                        هیچ اطلاعیه‌ای برای نمایش وجود ندارد.
+                    <div class="text-center py-4 text-muted">
+                        <i class="far fa-bell-slash fs-2 d-block mb-2 opacity-40"></i>
+                        <span class="small fw-bold">هیچ اطلاعیه جدیدی جهت نمایش ثبت نشده است.</span>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
-    
-    <!-- نمودار درآمد ماهانه -->
+</div>
+
+<!-- Charts & Activity Row -->
+<div class="row g-3">
+    <!-- Chart Box -->
     <div class="col-lg-7">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">نمودار درآمد ماهانه</h6></div>
-            <div class="card-body"><canvas id="myAreaChart"></canvas></div>
+        <div class="premium-box h-100 mb-0">
+            <div class="premium-box-header">
+                <h6 class="premium-box-title">
+                    <i class="fas fa-chart-area text-primary"></i>
+                    <span>نمودار روند درآمد ماهیانه</span>
+                </h6>
+                <span class="badge bg-light text-dark font-monospace border">سال جاری</span>
+            </div>
+            <div class="p-3 p-md-4">
+                <div style="position: relative; height: 290px; width: 100%;">
+                    <canvas id="myAreaChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <!-- فعالیت‌های اخیر -->
+
+    <!-- Recent Activity Timeline -->
     <div class="col-lg-5">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">فعالیت‌های اخیر</h6></div>
-            <div class="card-body"><p>در این بخش می‌توانید آخرین فعالیت‌های سیستم را مشاهده کنید.</p></div>
+        <div class="premium-box h-100 mb-0">
+            <div class="premium-box-header">
+                <h6 class="premium-box-title">
+                    <i class="fas fa-clock-rotate-left text-info"></i>
+                    <span>آخرین فعالیت‌های ثبت‌شده</span>
+                </h6>
+            </div>
+            <div class="p-3 p-md-4">
+                <div class="timeline-wrapper">
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background:#10b981;"></div>
+                        <div class="timeline-content">صدور فاکتور رسمی جدید در سیستم</div>
+                        <span class="timeline-time">۱۰ دقیقه پیش</span>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background:#6366f1;"></div>
+                        <div class="timeline-content">ثبت و پاسخ به تیکت پشتیبانی کارفرما</div>
+                        <span class="timeline-time">۴۵ دقیقه پیش</span>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background:#0284c7;"></div>
+                        <div class="timeline-content">به‌روزرسانی قرارداد خدمات سئو و پشتیبانی</div>
+                        <span class="timeline-time">۲ ساعت پیش</span>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background:#f59e0b;"></div>
+                        <div class="timeline-content">تایید درخواست مرخصی پرسنل در بخش منابع انسانی</div>
+                        <span class="timeline-time">امروز، ۱۱:۳۰</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Chart.js Engine -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    var ctx = document.getElementById('myAreaChart').getContext('2d');
-    var gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(78, 115, 223, 0.2)');   
-    gradient.addColorStop(1, 'rgba(78, 115, 223, 0)');
+    var chartCanvas = document.getElementById('myAreaChart');
+    if (!chartCanvas) return;
     
-    var myAreaChart = new Chart(ctx, {
+    var ctx = chartCanvas.getContext('2d');
+    
+    var gradient = ctx.createLinearGradient(0, 0, 0, 280);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.35)');   
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+    
+    new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور'],
             datasets: [{
-                label: 'درآمد (تومان)',
-                data: [1200000, 1900000, 1500000, 2500000, 2200000, 3000000],
+                label: 'درآمد کل',
+                data: [12500000, 19800000, 15400000, 25000000, 22100000, 31000000],
                 backgroundColor: gradient,
-                borderColor: '#4e73df',
-                borderWidth: 3,
-                pointBackgroundColor: '#4e73df',
-                pointBorderColor: '#fff',
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor: '#4e73df',
-                pointHoverBorderColor: '#fff',
+                borderColor: '#6366f1',
+                borderWidth: 3.5,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#6366f1',
+                pointBorderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#6366f1',
+                pointHoverBorderColor: '#ffffff',
                 fill: true,
                 tension: 0.4
             }],
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    rtl: true,
+                    titleFont: { family: 'Vazirmatn' },
+                    bodyFont: { family: 'Vazirmatn' },
+                    callbacks: {
+                        label: function(context) {
+                            var value = context.raw || 0;
+                            return 'درآمد: ' + new Intl.NumberFormat('fa-IR').format(value) + ' تومان';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { 
+                        color: '#64748b', 
+                        font: { family: 'Vazirmatn' },
+                        callback: function(value) {
+                            return new Intl.NumberFormat('fa-IR').format(value / 1000000) + ' م';
+                        }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { family: 'Vazirmatn' } }
+                }
+            }
+        }
     });
 });
 </script>

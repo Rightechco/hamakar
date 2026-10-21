@@ -106,4 +106,8 @@ public function commit() {
 public function rollBack() {
     return $this->dbh->rollBack();
 }
+public function single() {
+        $this->execute();
+        return $this->stmt->fetch(PDO::FETCH_OBJ);
+    }
 }

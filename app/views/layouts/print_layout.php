@@ -4,27 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo sanitize($title ?? 'چاپ'); ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+
     <style>
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-            background-color: #fff;
-            color: #000;
-        }
-        @media print {
-            .no-print {
-                display: none;
-            }
-        }
-        .container-fluid {
-            padding: 2rem;
-        }
+        body { font-family: 'Vazirmatn', sans-serif; background: white; color: black; }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
-<body onload="window.print()">
+<body onload="window.print()" class="p-8">
 
-<?php echo $content; ?>
+    <div class="max-w-5xl mx-auto">
+        <?php echo $content; ?>
+    </div>
 
 </body>
 </html>

@@ -1,118 +1,116 @@
 <?php
-// app/views/admin/inventory/products/index.php - نمای جدید با فیلتر، جستجو و AJAX
+// app/views/admin/inventory/products/index.php - نسخه اولترا پرمیوم و مدرن
 global $auth;
-$products = $products ?? [];
-$categories = $categories ?? [];
-$filters = $filters ?? [];
+$products =$products ?? [];
+$categories =$categories ?? [];
+$filters =$filters ?? [];
 ?>
 
-<style>
-    .product-image {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        border-radius: 5px;
-    }
-    .product-table-card {
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .product-name {
-        font-weight: 600;
-        color: #333;
-    }
-    .text-muted.small {
-        font-size: 0.8rem;
-    }
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-</style>
-
-<h1 class="mb-4">مدیریت محصولات</h1>
-
-<div class="card product-table-card mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
-        <h5 class="mb-0">لیست محصولات</h5>
-        <div class="d-flex align-items-center">
-            <?php if ($auth->hasRole(['admin', 'accountant'])): ?>
-                <a href="<?php echo APP_URL; ?>/index.php?page=products&action=create" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> افزودن محصول جدید
-                </a>
-            <?php endif; ?>
-        </div>
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">مدیریت محصولات و انبار</h1>
+        <p class="text-muted small mb-0">ساماندهی کالاها، قیمت‌گذاری، دسته‌بندی و نظارت بر موجودی انبار</p>
     </div>
-    <div class="card-body">
-        <form id="filter-form" class="mb-4 p-3 border rounded-3 bg-light" action="<?php echo APP_URL; ?>/index.php" method="GET">
+    
+    <div class="d-flex align-items-center gap-2 no-print">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+            <i class="fas fa-print"></i>
+            <span>چاپ لیست</span>
+        </button>
+        <?php if ($auth->hasRole(['admin', 'accountant'])): ?>
+            <a href="<?php echo APP_URL; ?>/index.php?page=products&action=create" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+                <i class="fas fa-plus"></i>
+                <span>افزودن محصول جدید</span>
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-header bg-white py-3 border-bottom no-print">
+        <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
+            <i class="fas fa-filter text-primary"></i>
+            <span>فیلتر و جستجوی پیشرفته محصولات</span>
+        </h6>
+    </div>
+    
+    <div class="card-body p-3 bg-light no-print border-bottom">
+        <form id="filter-form" action="<?php echo APP_URL; ?>/index.php" method="GET">
             <input type="hidden" name="page" value="products">
             <input type="hidden" name="action" value="index">
-            <div class="d-flex flex-wrap align-items-end gap-3">
-                <div class="flex-grow-1">
-                    <label for="search" class="form-label text-muted small">جستجو:</label>
-                    <input type="text" class="form-control form-control-sm" id="search" name="search" placeholder="نام یا کد کالا" value="<?php echo htmlspecialchars($filters['search'] ?? ''); ?>">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="search" class="form-label text-muted small fw-bold">جستجو:</label>
+                    <input type="text" class="form-control form-control-sm rounded-3" id="search" name="search" placeholder="نام محصول یا کد کالا (SKU)..." value="<?php echo htmlspecialchars($filters['search'] ?? ''); ?>">
                 </div>
-                <div class="flex-grow-1">
-                    <label for="category_id" class="form-label text-muted small">دسته‌بندی:</label>
-                    <select class="form-select form-select-sm" id="category_id" name="category_id">
+                <div class="col-md-5">
+                    <label for="category_id" class="form-label text-muted small fw-bold">دسته‌بندی:</label>
+                    <select class="form-select form-select-sm rounded-3" id="category_id" name="category_id">
                         <option value="">همه دسته‌بندی‌ها</option>
-                        <?php foreach($categories as $category): ?>
-                            <option value="<?php echo $category->id; ?>" <?php echo (isset($filters['category_id']) && $filters['category_id'] == $category->id) ? 'selected' : ''; ?>>
+                        <?php foreach($categories as$category): ?>
+                            <option value="<?php echo $category->id; ?>" <?php echo (isset($filters['category_id']) && $filters['category_id'] ==$category->id) ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($category->name); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="button" id="apply-filter-btn" class="btn btn-secondary btn-sm">اعمال فیلتر</button>
-                    <a href="<?php echo APP_URL; ?>/index.php?page=products&action=index" class="btn btn-outline-secondary btn-sm">پاک کردن فیلتر</a>
+                <div class="col-md-2 d-flex gap-1">
+                    <button type="button" id="apply-filter-btn" class="btn btn-primary btn-sm rounded-3 w-100" title="اعمال فیلتر"><i class="fas fa-search"></i></button>
+                    <a href="<?php echo APP_URL; ?>/index.php?page=products&action=index" class="btn btn-outline-secondary btn-sm rounded-3" title="بازنشانی"><i class="fas fa-undo"></i></a>
                 </div>
             </div>
         </form>
+    </div>
 
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover table-striped">
-                <thead>
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-secondary small">
                     <tr>
-                        <th>تصویر</th>
+                        <th class="ps-3" style="width: 70px;">تصویر</th>
                         <th>نام محصول</th>
                         <th>کد کالا (SKU)</th>
                         <th>دسته‌بندی</th>
-                        <th>قیمت خرید</th>
-                        <th>قیمت فروش</th>
+                        <th>قیمت خرید (تومان)</th>
+                        <th>قیمت فروش (تومان)</th>
                         <th>موجودی</th>
-                        <th>عملیات</th>
+                        <th class="text-center no-print" style="width: 140px;">عملیات</th>
                     </tr>
                 </thead>
                 <tbody id="products-table-body">
                     <?php if (!empty($products)): ?>
-                        <?php foreach ($products as $product): ?>
+                        <?php foreach ($products as$product): ?>
                             <tr>
-                                <td>
+                                <td class="ps-3">
                                     <?php if (!empty($product->image_path)): ?>
-                                        <img src="<?php echo APP_URL; ?>/public/uploads/products/<?php echo htmlspecialchars($product->image_path); ?>" alt="<?php echo htmlspecialchars($product->name); ?>" class="product-image">
+                                        <img src="<?php echo APP_URL; ?>/public/uploads/products/<?php echo htmlspecialchars($product->image_path); ?>" alt="<?php echo htmlspecialchars($product->name); ?>" class="rounded-3 border object-fit-cover" style="width: 45px; height: 45px;">
                                     <?php else: ?>
-                                        <img src="<?php echo APP_URL; ?>/assets/img/no-image.png" alt="No Image" class="product-image">
+                                        <img src="<?php echo APP_URL; ?>/assets/img/no-image.png" alt="No Image" class="rounded-3 border object-fit-cover" style="width: 45px; height: 45px;">
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="product-name"><?php echo sanitize($product->name); ?></span>
-                                    <small class="d-block text-muted"><?php echo sanitize($product->description ?? ''); ?></small>
+                                    <span class="fw-bold text-dark d-block"><?php echo sanitize($product->name); ?></span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;"><?php echo sanitize($product->description ?? ''); ?></small>
                                 </td>
-                                <td><?php echo sanitize($product->sku); ?></td>
-                                <td><?php echo sanitize($product->category_name ?? 'بدون دسته‌بندی'); ?></td>
-                                <td><?php echo number_format($product->purchase_price); ?></td>
-                                <td><?php echo number_format($product->sale_price); ?></td>
-                                <td><?php echo number_format($product->inventory); ?> (<?php echo sanitize($product->unit_name ?? 'عدد'); ?>)</td>
+                                <td class="font-monospace small"><?php echo sanitize($product->sku); ?></td>
+                                <td><span class="badge bg-light text-dark border"><?php echo sanitize($product->category_name ?? 'بدون دسته‌بندی'); ?></span></td>
+                                <td class="font-monospace"><?php echo number_format($product->purchase_price); ?></td>
+                                <td class="font-monospace fw-bold text-success"><?php echo number_format($product->sale_price); ?></td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="<?php echo APP_URL; ?>/index.php?page=inventory&action=product_flow_report&id=<?php echo $product->id; ?>" class="btn btn-sm btn-secondary" title="گزارش گردش">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1">
+                                        <?php echo number_format($product->inventory); ?> <small><?php echo sanitize($product->unit_name ?? 'عدد'); ?></small>
+                                    </span>
+                                </td>
+                                <td class="text-center no-print">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="<?php echo APP_URL; ?>/index.php?page=inventory&action=product_flow_report&id=<?php echo $product->id; ?>" class="btn btn-outline-secondary" title="گزارش گردش کالا">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
-                                        <a href="<?php echo APP_URL; ?>/index.php?page=products&action=edit&id=<?php echo $product->id; ?>" class="btn btn-sm btn-info" title="ویرایش">
+                                        <a href="<?php echo APP_URL; ?>/index.php?page=products&action=edit&id=<?php echo $product->id; ?>" class="btn btn-outline-primary" title="ویرایش محصول">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="<?php echo APP_URL; ?>/index.php?page=products&action=delete&id=<?php echo $product->id; ?>" method="POST" class="d-inline-block">
-                                            <button type="submit" class="btn btn-sm btn-danger" data-confirm-delete title="حذف">
+                                        <form action="<?php echo APP_URL; ?>/index.php?page=products&action=delete&id=<?php echo $product->id; ?>" method="POST" class="d-inline" onsubmit="return confirm('آیا از حذف این محصول اطمینان دارید؟');">
+                                            <button type="submit" class="btn btn-outline-danger" title="حذف">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
@@ -122,7 +120,10 @@ $filters = $filters ?? [];
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center py-4">هیچ محصولی یافت نشد.</td>
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="fas fa-box-open fs-2 mb-2 d-block opacity-50"></i>
+                                هیچ محصولی یافت نشد.
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -150,10 +151,16 @@ $filters = $filters ?? [];
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("پاسخ دریافتی از سرور فرمت JSON ندارد.");
+                }
+                return response.json();
+            })
             .then(data => {
                 tableBody.innerHTML = '';
-                if (data.length > 0) {
+                if (data && data.length > 0) {
                     data.forEach(product => {
                         const productImage = product.image_path 
                             ? `<?php echo APP_URL; ?>/public/uploads/products/${product.image_path}` 
@@ -161,28 +168,32 @@ $filters = $filters ?? [];
                         
                         const row = `
                             <tr>
-                                <td>
-                                    <img src="${productImage}" alt="${product.name}" class="product-image">
+                                <td class="ps-3">
+                                    <img src="${productImage}" alt="${product.name}" class="rounded-3 border object-fit-cover" style="width: 45px; height: 45px;">
                                 </td>
                                 <td>
-                                    <span class="product-name">${product.name}</span>
-                                    <small class="d-block text-muted">${product.description || ''}</small>
+                                    <span class="fw-bold text-dark d-block">${product.name}</span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;">${product.description || ''}</small>
                                 </td>
-                                <td>${product.sku}</td>
-                                <td>${product.category_name || 'بدون دسته‌بندی'}</td>
-                                <td>${new Intl.NumberFormat().format(product.purchase_price)}</td>
-                                <td>${new Intl.NumberFormat().format(product.sale_price)}</td>
-                                <td>${new Intl.NumberFormat().format(product.inventory)} (${product.unit_name || 'عدد'})</td>
+                                <td class="font-monospace small">${product.sku}</td>
+                                <td><span class="badge bg-light text-dark border">${product.category_name || 'بدون دسته‌بندی'}</span></td>
+                                <td class="font-monospace">${new Intl.NumberFormat().format(product.purchase_price)}</td>
+                                <td class="font-monospace fw-bold text-success">${new Intl.NumberFormat().format(product.sale_price)}</td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="${url}?page=inventory&action=product_flow_report&id=${product.id}" class="btn btn-sm btn-secondary" title="گزارش گردش">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1">
+                                        ${new Intl.NumberFormat().format(product.inventory)} <small>${product.unit_name || 'عدد'}</small>
+                                    </span>
+                                </td>
+                                <td class="text-center no-print">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="${url}?page=inventory&action=product_flow_report&id=${product.id}" class="btn btn-outline-secondary" title="گزارش گردش کالا">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
-                                        <a href="${url}?page=products&action=edit&id=${product.id}" class="btn btn-sm btn-info" title="ویرایش">
+                                        <a href="${url}?page=products&action=edit&id=${product.id}" class="btn btn-outline-primary" title="ویرایش محصول">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="${url}?page=products&action=delete&id=${product.id}" method="POST" class="d-inline-block">
-                                            <button type="submit" class="btn btn-sm btn-danger" data-confirm-delete title="حذف">
+                                        <form action="${url}?page=products&action=delete&id=${product.id}" method="POST" class="d-inline" onsubmit="return confirm('آیا از حذف این محصول اطمینان دارید؟');">
+                                            <button type="submit" class="btn btn-outline-danger" title="حذف">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
@@ -193,12 +204,12 @@ $filters = $filters ?? [];
                         tableBody.innerHTML += row;
                     });
                 } else {
-                    tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4">هیچ محصولی یافت نشد.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-5"><i class="fas fa-box-open fs-2 mb-2 d-block opacity-50"></i>هیچ محصولی یافت نشد.</td></tr>`;
                 }
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
-                tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">خطا در بارگذاری اطلاعات.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4"><i class="fas fa-exclamation-circle me-1"></i> خطا در بارگذاری اطلاعات محصولات.</td></tr>`;
             });
         };
 

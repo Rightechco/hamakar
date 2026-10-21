@@ -176,4 +176,49 @@ class Sale {
             return false;
         }
     }
+    
+    public function deleteSale($id) {
+    try {
+        $this->db->beginTransaction();
+
+        // ۱. دریافت آیتم‌های فاکتور فروش
+        $this->db->query("SELECT * FROM sale_items WHERE sale_id = :id");
+        $this->db->bind(':id', $id);
+        $items = $this->db->fetchAll() ?? [];
+
+        // ۲. برگشت موجودی کالاها به انبار (ورود مجدد به انبار بابت ابطال فروش)
+        foreach ($items as $item) {
+            $this->db->query("INSERT INTO inventory_logs (warehouse_id, product_id, quantity, log_type, source_id, source_type, user_id) 
+                              VALUES (:warehouse_id, :product_id, :quantity, 'in', :source_id, 'sale', :user_id)");
+            $this->db->bind(':warehouse_id', $item->warehouse_id ?? 1);
+            $this->db->bind(':product_id', $item->product_id);
+            $this->db->bind(':quantity', $item->quantity);
+            $this->db->bind(':source_id', $id);
+            $this->db->bind(':user_id', $_SESSION['user_id'] ?? 1);
+            $this->db->execute();
+        }
+
+        // ۳. حذف اسناد حسابداری مرتبط با این فاکتور فروش
+        $this->db->query("DELETE FROM journal_vouchers WHERE description LIKE :desc");
+        $this->db->bind(':desc', '%فاکتور شماره ' . $id . '%');
+        $this->db->execute();
+
+        // ۴. حذف آیتم‌های فاکتور فروش
+        $this->db->query("DELETE FROM sale_items WHERE sale_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->execute();
+
+        // ۵. حذف رکورد اصلی فاکتور فروش
+        $this->db->query("DELETE FROM sales WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $result = $this->db->execute();
+
+        $this->db->commit();
+        return $result;
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        error_log("Error deleting sale " . $id . ": " . $e->getMessage());
+        return false;
+    }
+    }
 }
