@@ -30,7 +30,7 @@ class PurchaseRequisition {
     }
 
     public function getAll($status = null) {
-        $sql = "SELECT pr.*, p.name as product_name, p.code as product_code,
+        $sql = "SELECT pr.*, p.name as product_name, p.sku as product_code,
                        u.name as requester_name, w.name as warehouse_name
                 FROM purchase_requisitions pr
                 LEFT JOIN products p ON pr.product_id = p.id

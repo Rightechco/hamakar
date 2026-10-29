@@ -38,7 +38,7 @@ class Bom {
     }
 
     public function getAll() {
-        $this->db->query("SELECT b.*, p.name as product_name, p.code as product_code 
+        $this->db->query("SELECT b.*, p.name as product_name, p.sku as product_code 
                           FROM boms b
                           LEFT JOIN products p ON b.product_id = p.id
                           ORDER BY b.id DESC");
@@ -46,7 +46,7 @@ class Bom {
     }
 
     public function getById($id) {
-        $this->db->query("SELECT b.*, p.name as product_name, p.code as product_code 
+        $this->db->query("SELECT b.*, p.name as product_name, p.sku as product_code 
                           FROM boms b
                           LEFT JOIN products p ON b.product_id = p.id
                           WHERE b.id = :id");
