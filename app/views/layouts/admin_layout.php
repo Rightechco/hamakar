@@ -7,6 +7,14 @@ global $auth;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Suha & Nuxt Mobile App & PWA Settings -->
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="https://hamakar.ir/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="https://hamakar.ir/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="https://hamakar.ir/images/favicon-32x32.png">
+
     <title><?php echo sanitize($title ?? 'پنل مدیریت'); ?> - رایان تکرو</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -133,6 +141,74 @@ global $auth;
         .chat-message .message-bubble{display:inline-block;max-width:80%;padding:10px 15px;border-radius:15px;line-height:1.5;}
         .chat-message.sender .message-bubble{background-color:#3498db;color:white;border-bottom-right-radius:3px;}
         .chat-message.receiver .message-bubble{background-color:#e9ecef;color:#212529;border-bottom-left-radius:3px;}
+    
+        /* Nuxt-style surfaces and micro-elevations */
+        .card {
+            border-radius: 16px !important;
+            border: 1px solid #eef2f6 !important;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035) !important;
+            transition: all 0.25s ease;
+        }
+        .card-header {
+            border-top-right-radius: 16px !important;
+            border-top-left-radius: 16px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .table-responsive {
+            border-radius: 14px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Suha Mobile App Bottom Nav for Admin */
+        .admin-suha-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.06);
+            z-index: 1040;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 0.5rem;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .admin-suha-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            text-decoration: none;
+            color: #64748b;
+            gap: 2px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.35rem 0;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .admin-suha-item i {
+            font-size: 1.15rem;
+        }
+        .admin-suha-item.active, .admin-suha-item:active {
+            color: #0d6efd;
+        }
+        @media (max-width: 768px) {
+            .admin-suha-bottom-nav { display: flex !important; }
+            main { padding: 1.25rem 1rem 82px !important; }
+            .chat-widget-toggler { bottom: 74px !important; }
+            .chat-window { bottom: 140px !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -348,5 +424,30 @@ global $auth;
     $chatForm.on('submit', sendMessage);
 });
 </script>
+
+<!-- Suha Native Mobile Bottom App Navigation for Admin -->
+<nav class="admin-suha-bottom-nav">
+    <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=dashboard" class="admin-suha-item <?php echo (($action ?? '') === 'dashboard') ? 'active' : ''; ?>">
+        <i class="fas fa-house"></i>
+        <span>پیشخوان</span>
+    </a>
+    <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=moadianInvoices" class="admin-suha-item <?php echo (($action ?? '') === 'moadianInvoices') ? 'active' : ''; ?>">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>مودیان</span>
+    </a>
+    <button type="button" class="admin-suha-item" onclick="const t = document.getElementById('sidebarToggleTop'); if(t) t.click();">
+        <i class="fas fa-bars-staggered"></i>
+        <span>ماژول‌ها</span>
+    </button>
+    <button type="button" class="admin-suha-item" onclick="const c = document.getElementById('chat-toggler'); if(c) c.click();">
+        <i class="fas fa-comments"></i>
+        <span>چت</span>
+    </button>
+    <a href="<?php echo APP_URL; ?>/index.php?page=logout" class="admin-suha-item">
+        <i class="fas fa-arrow-right-from-bracket"></i>
+        <span>خروج</span>
+    </a>
+</nav>
+
 </body>
 </html>
