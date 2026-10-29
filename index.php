@@ -25,6 +25,7 @@ require_once __DIR__ . '/app/core/Database.php';
 require_once __DIR__ . '/app/core/Auth.php';
 require_once __DIR__ . '/app/core/Validator.php';
 require_once __DIR__ . '/app/core/Helpers.php';
+require_once __DIR__ . '/app/core/LicenseManager.php';
 require_once __DIR__ . '/app/core/FlashMessage.php';
 require_once __DIR__ . '/app/lib/numberToWords.php';
 
@@ -212,6 +213,11 @@ switch ($page) {
             case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
             case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'licensing': $targetMethod = 'licensing'; break;
+            case 'activate_license': $targetMethod = 'activateLicense'; break;
+            case 'generate_license': $targetMethod = 'generateLicense'; break;
+            case 'upgrade_plan': $targetMethod = 'upgradePlan'; break;
+            case 'get_hardware_fingerprint': $targetMethod = 'getHardwareFingerprint'; break;
             case 'test_moadian_connection': $targetMethod = 'testMoadianConnection'; break;
             case 'generate_moadian_keys': $targetMethod = 'generateMoadianKeys'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
@@ -561,6 +567,11 @@ switch ($page) {
             case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
             case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'licensing': $targetMethod = 'licensing'; break;
+            case 'activate_license': $targetMethod = 'activateLicense'; break;
+            case 'generate_license': $targetMethod = 'generateLicense'; break;
+            case 'upgrade_plan': $targetMethod = 'upgradePlan'; break;
+            case 'get_hardware_fingerprint': $targetMethod = 'getHardwareFingerprint'; break;
             case 'test_moadian_connection': $targetMethod = 'testMoadianConnection'; break;
             case 'generate_moadian_keys': $targetMethod = 'generateMoadianKeys'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
@@ -647,6 +658,11 @@ switch ($page) {
             case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
             case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'licensing': $targetMethod = 'licensing'; break;
+            case 'activate_license': $targetMethod = 'activateLicense'; break;
+            case 'generate_license': $targetMethod = 'generateLicense'; break;
+            case 'upgrade_plan': $targetMethod = 'upgradePlan'; break;
+            case 'get_hardware_fingerprint': $targetMethod = 'getHardwareFingerprint'; break;
             case 'test_moadian_connection': $targetMethod = 'testMoadianConnection'; break;
             case 'generate_moadian_keys': $targetMethod = 'generateMoadianKeys'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;

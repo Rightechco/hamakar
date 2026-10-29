@@ -1108,6 +1108,14 @@ main {
             </div>
         </a>
 
+                <a href="index.php?page=admin&action=licensing" class="suha-module-card" data-title="مدیریت لایسنس، قفل سخت افزاری و پلن ها">
+            <div class="suha-module-icon" style="background:#fef3c7; color:#d97706;"><i class="fas fa-certificate"></i></div>
+            <div class="suha-module-info">
+                <div class="suha-module-title">لایسنس و پلن‌ها</div>
+                <div class="suha-module-desc">قفل سخت‌افزاری و فروش ماژولار</div>
+            </div>
+        </a>
+
         <a href="index.php?page=admin&action=system_settings" class="suha-module-card" data-title="تنظیمات سامانه">
             <div class="suha-module-icon" style="background:#f1f5f9; color:#475569;"><i class="fas fa-sliders-h"></i></div>
             <div class="suha-module-info">

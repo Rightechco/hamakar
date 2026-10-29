@@ -4903,4 +4903,92 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         exit();
     }
 
+
+    public function licensing() {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../core/LicenseManager.php';
+        
+        $activeLicense = LicenseManager::getActiveLicense();
+        $machineFingerprint = LicenseManager::getMachineFingerprint();
+        $plans = LicenseManager::$PLANS;
+        $modules = LicenseManager::$MODULES;
+
+        view('admin/license/index', [
+            'layout' => 'admin_layout',
+            'title' => 'مدیریت لایسنس، قفل سخت‌افزاری و پلن‌های تجاری',
+            'license' => $activeLicense,
+            'machineFingerprint' => $machineFingerprint,
+            'plans' => $plans,
+            'modules' => $modules
+        ]);
+    }
+
+    public function activateLicense() {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../core/LicenseManager.php';
+
+        $licenseKey = '';
+        if (!empty($_FILES['license_file']['tmp_name'])) {
+            $licenseKey = trim(file_get_contents($_FILES['license_file']['tmp_name']));
+        } elseif (!empty($_POST['license_key'])) {
+            $licenseKey = trim($_POST['license_key']);
+        }
+
+        if (empty($licenseKey)) {
+            FlashMessage::set('message', 'کد لایسنس یا فایل معتبر ارائه نشده است.', 'error');
+            redirect(APP_URL . '/index.php?page=admin&action=licensing');
+        }
+
+        $res = LicenseManager::activateLicense($licenseKey);
+        if ($res['valid']) {
+            FlashMessage::set('message', 'لایسنس با موفقیت اعتبارسنجی و در سامانه فعال گردید.', 'success');
+        } else {
+            FlashMessage::set('message', 'خطا در فعال‌سازی: ' . $res['message'], 'error');
+        }
+
+        redirect(APP_URL . '/index.php?page=admin&action=licensing');
+    }
+
+    public function generateLicense() {
+        $this->auth->restrict(['admin']);
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../core/LicenseManager.php';
+
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true);
+        if (!$data) $data = $_POST;
+
+        $res = LicenseManager::generateLicense($data);
+        echo json_encode($res, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    public function upgradePlan() {
+        require_once __DIR__ . '/../core/LicenseManager.php';
+        $moduleKey = sanitize($_GET['module'] ?? '');
+        $plans = LicenseManager::$PLANS;
+        $modules = LicenseManager::$MODULES;
+        $activeLicense = LicenseManager::getActiveLicense();
+
+        view('admin/license/upgrade', [
+            'layout' => 'admin_layout',
+            'title' => 'ارتقای پلن تجاری هماکار',
+            'moduleKey' => $moduleKey,
+            'moduleInfo' => $modules[$moduleKey] ?? null,
+            'plans' => $plans,
+            'activeLicense' => $activeLicense
+        ]);
+    }
+
+    public function getHardwareFingerprint() {
+        $this->auth->restrict(['admin']);
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../core/LicenseManager.php';
+        echo json_encode([
+            'status' => 'success',
+            'hardware_id' => LicenseManager::getMachineFingerprint()
+        ]);
+        exit();
+    }
+
 }
