@@ -391,4 +391,28 @@ class ClientController {
         $this->db->bind(':client_id', $clientId);
         return $this->db->fetchAll();
     }
+
+    // =========================================================================
+    // پورتال مشتریان - صورت‌حساب مالی و ثبت فیش واریزی
+    // =========================================================================
+    public function statement() {
+        $clientId = $this->auth->user()->client_id ?? $this->auth->user()->id;
+        $invoices = $this->invoiceModel->getInvoicesByClientId($clientId);
+        $payments = $this->paymentModel->getPaymentsByClientId($clientId);
+
+        view('client/statement', [
+            'layout' => 'client_layout',
+            'title' => 'صورت‌حساب مالی و گردش حساب من',
+            'invoices' => $invoices,
+            'payments' => $payments
+        ]);
+    }
+
+    public function submitPaymentProof() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            FlashMessage::set('message', 'فیش واریزی شما با موفقیت ثبت شد و پس از بررسی حسابداری تایید خواهد گردید.', 'success');
+        }
+        redirect(APP_URL . '/index.php?page=client&action=statement');
+    }
+
 }

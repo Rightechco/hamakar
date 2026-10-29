@@ -4228,4 +4228,399 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         }
         return false;
     }
+
+    // =========================================================================
+    // ۱. سامانه مودیان مالیاتی (Taxpayer System)
+    // =========================================================================
+    public function moadianInvoices() {
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $invoices = $moadianModel->getAll(100);
+
+        view('admin/moadian/index', [
+            'layout' => 'admin_layout',
+            'title' => 'سامانه مودیان مالیاتی',
+            'invoices' => $invoices
+        ]);
+    }
+
+    public function sendToMoadian() {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            FlashMessage::set('message', 'شناسه فاکتور مشخص نشده است.', 'error');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        }
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $res = $moadianModel->transmitToTaxAuthority($id);
+        if ($res['success']) {
+            FlashMessage::set('message', $res['message'] . ' (شناسه یکتا: ' . $res['taxid'] . ')', 'success');
+        } else {
+            FlashMessage::set('message', $res['message'], 'error');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+    }
+
+    // =========================================================================
+    // ۲. خزانه‌داری پیشرفته، چک‌ها و راس‌گیری وزنی (Treasury & Cheques & Rasgiri)
+    // =========================================================================
+    public function treasuryCheques() {
+        require_once __DIR__ . '/../models/Cheque.php';
+        $chequeModel = new Cheque();
+        $type = $_GET['type'] ?? null;
+        $status = $_GET['status'] ?? null;
+        $cheques = $chequeModel->getAll($type, $status);
+
+        view('admin/treasury/cheques', [
+            'layout' => 'admin_layout',
+            'title' => 'مدیریت چک‌های صیادی و خزانه‌داری',
+            'cheques' => $cheques,
+            'currentType' => $type,
+            'currentStatus' => $status
+        ]);
+    }
+
+    public function createCheque() {
+        $clients = $this->clientModel->getAll();
+        view('admin/treasury/create_cheque', [
+            'layout' => 'admin_layout',
+            'title' => 'ثبت چک صیادی جدید',
+            'clients' => $clients
+        ]);
+    }
+
+    public function storeCheque() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/Cheque.php';
+            $chequeModel = new Cheque();
+            $id = $chequeModel->create($_POST);
+            if ($id) {
+                FlashMessage::set('message', 'چک صیادی با موفقیت در سیستم خزانه‌داری ثبت شد.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ثبت اطلاعات چک.', 'error');
+            }
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=treasury_cheques');
+    }
+
+    public function changeChequeStatus() {
+        $id = $_GET['id'] ?? null;
+        $status = $_GET['status'] ?? 'cleared';
+        $transferredTo = $_POST['transferred_to'] ?? null;
+
+        if ($id) {
+            require_once __DIR__ . '/../models/Cheque.php';
+            $chequeModel = new Cheque();
+            $chequeModel->updateStatus($id, $status, $transferredTo);
+            FlashMessage::set('message', 'وضعیت چک با موفقیت بروزرسانی شد.', 'success');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=treasury_cheques');
+    }
+
+    public function treasuryRasgiri() {
+        require_once __DIR__ . '/../models/Cheque.php';
+        $chequeModel = new Cheque();
+        $allCheques = $chequeModel->getAll('received', 'pending');
+        
+        $rasResult = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['selected_cheques'])) {
+            $selectedIds = $_POST['selected_cheques'];
+            $items = [];
+            foreach ($allCheques as $ch) {
+                if (in_array($ch->id, $selectedIds)) {
+                    $items[] = ['amount' => $ch->amount, 'date' => $ch->due_date];
+                }
+            }
+            $rasResult = Cheque::calculateRas($items, $_POST['base_date'] ?? date('Y/m/d'));
+        }
+
+        view('admin/treasury/rasgiri', [
+            'layout' => 'admin_layout',
+            'title' => 'محاسبه‌گر راس‌گیری وزنی چک‌ها و فاکتورها',
+            'cheques' => $allCheques,
+            'rasResult' => $rasResult
+        ]);
+    }
+
+    // =========================================================================
+    // ۳. برنامه‌ریزی تولید، فرمول ساخت (BOM) و بهای تمام‌شده (Manufacturing & BOM)
+    // =========================================================================
+    public function boms() {
+        require_once __DIR__ . '/../models/Bom.php';
+        $bomModel = new Bom();
+        $boms = $bomModel->getAll();
+
+        view('admin/manufacturing/boms', [
+            'layout' => 'admin_layout',
+            'title' => 'فرمول‌های ساخت کالا (BOM)',
+            'boms' => $boms
+        ]);
+    }
+
+    public function createBom() {
+        require_once __DIR__ . '/../models/Product.php';
+        require_once __DIR__ . '/../models/Unit.php';
+        $productModel = new Product();
+        $unitModel = new Unit();
+
+        $products = $productModel->getAll();
+        $units = $unitModel->getAll();
+
+        view('admin/manufacturing/create_bom', [
+            'layout' => 'admin_layout',
+            'title' => 'تعریف فرمول ساخت جدید (BOM)',
+            'products' => $products,
+            'units' => $units
+        ]);
+    }
+
+    public function storeBom() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/Bom.php';
+            $bomModel = new Bom();
+
+            $items = [];
+            if (!empty($_POST['raw_materials'])) {
+                foreach ($_POST['raw_materials'] as $index => $rawId) {
+                    if (!empty($rawId)) {
+                        $items[] = [
+                            'raw_material_id' => $rawId,
+                            'quantity' => $_POST['raw_quantities'][$index] ?? 1,
+                            'scrap_percent' => $_POST['scrap_percents'][$index] ?? 0,
+                            'unit_id' => $_POST['raw_units'][$index] ?? null
+                        ];
+                    }
+                }
+            }
+
+            $bomId = $bomModel->create($_POST, $items);
+            if ($bomId) {
+                FlashMessage::set('message', 'فرمول ساخت با موفقیت ذخیره شد.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ثبت فرمول ساخت.', 'error');
+            }
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=boms');
+    }
+
+    public function productionOrders() {
+        require_once __DIR__ . '/../models/ProductionOrder.php';
+        $poModel = new ProductionOrder();
+        $orders = $poModel->getAll();
+
+        view('admin/manufacturing/orders', [
+            'layout' => 'admin_layout',
+            'title' => 'دستورات تولید و بهای تمام‌شده',
+            'orders' => $orders
+        ]);
+    }
+
+    public function createProductionOrder() {
+        require_once __DIR__ . '/../models/Bom.php';
+        require_once __DIR__ . '/../models/Warehouse.php';
+        $bomModel = new Bom();
+        $whModel = new Warehouse();
+
+        view('admin/manufacturing/create_order', [
+            'layout' => 'admin_layout',
+            'title' => 'صدور دستور تولید جدید',
+            'boms' => $bomModel->getAll(),
+            'warehouses' => $whModel->getAll()
+        ]);
+    }
+
+    public function storeProductionOrder() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/ProductionOrder.php';
+            $poModel = new ProductionOrder();
+            $id = $poModel->create($_POST);
+            if ($id) {
+                FlashMessage::set('message', 'دستور تولید با موفقیت صادر شد.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ثبت دستور تولید.', 'error');
+            }
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=production_orders');
+    }
+
+    public function completeProductionOrder() {
+        $id = $_GET['id'] ?? null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
+            require_once __DIR__ . '/../models/ProductionOrder.php';
+            $poModel = new ProductionOrder();
+            $actualQty = (float)($_POST['actual_qty'] ?? 1);
+            $laborCost = (int)($_POST['actual_labor_cost'] ?? 0);
+            $overheadCost = (int)($_POST['actual_overhead_cost'] ?? 0);
+
+            $res = $poModel->completeOrder($id, $actualQty, $laborCost, $overheadCost);
+            if ($res) {
+                FlashMessage::set('message', 'عملیات تولید تکمیل و کالاها به انبار منتقل شدند. بهای تمام‌شده محاسبه گردید.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در نهایی‌سازی تولید.', 'error');
+            }
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=production_orders');
+    }
+
+    // =========================================================================
+    // ۴. تدارکات و زنجیره تأمین (Procurement & SCM)
+    // =========================================================================
+    public function procurementRequisitions() {
+        require_once __DIR__ . '/../models/PurchaseRequisition.php';
+        $reqModel = new PurchaseRequisition();
+        $status = $_GET['status'] ?? null;
+        $requisitions = $reqModel->getAll($status);
+
+        view('admin/procurement/index', [
+            'layout' => 'admin_layout',
+            'title' => 'مدیریت درخواست‌های خرید و تدارکات',
+            'requisitions' => $requisitions,
+            'currentStatus' => $status
+        ]);
+    }
+
+    public function createRequisition() {
+        require_once __DIR__ . '/../models/Product.php';
+        require_once __DIR__ . '/../models/Warehouse.php';
+        $productModel = new Product();
+        $whModel = new Warehouse();
+
+        view('admin/procurement/create', [
+            'layout' => 'admin_layout',
+            'title' => 'ثبت درخواست خرید جدید',
+            'products' => $productModel->getAll(),
+            'warehouses' => $whModel->getAll()
+        ]);
+    }
+
+    public function storeRequisition() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/PurchaseRequisition.php';
+            $reqModel = new PurchaseRequisition();
+            $_POST['requester_id'] = Auth::user()->id ?? null;
+            $id = $reqModel->create($_POST);
+            if ($id) {
+                FlashMessage::set('message', 'درخواست خرید با موفقیت ثبت شد.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ثبت درخواست خرید.', 'error');
+            }
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=procurement_requisitions');
+    }
+
+    public function approveRequisition() {
+        $id = $_GET['id'] ?? null;
+        $status = $_GET['status'] ?? 'approved';
+        if ($id) {
+            require_once __DIR__ . '/../models/PurchaseRequisition.php';
+            $reqModel = new PurchaseRequisition();
+            $reqModel->updateStatus($id, $status, Auth::user()->id ?? null);
+            FlashMessage::set('message', 'وضعیت درخواست خرید با موفقیت بروزرسانی شد.', 'success');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=procurement_requisitions');
+    }
+
+    // =========================================================================
+    // ۵. تضامین و ضمانت‌نامه‌های قراردادها (Contract Guarantees)
+    // =========================================================================
+    public function contractGuarantees() {
+        require_once __DIR__ . '/../models/ContractGuarantee.php';
+        $cgModel = new ContractGuarantee();
+        $contractId = $_GET['contract_id'] ?? null;
+        $guarantees = $cgModel->getAll($contractId);
+
+        $contracts = $this->contractModel->getAll();
+
+        view('admin/contracts/guarantees', [
+            'layout' => 'admin_layout',
+            'title' => 'مدیریت تضامین و ضمانت‌نامه‌های بانکی',
+            'guarantees' => $guarantees,
+            'contracts' => $contracts,
+            'currentContractId' => $contractId
+        ]);
+    }
+
+    public function storeGuarantee() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/ContractGuarantee.php';
+            $cgModel = new ContractGuarantee();
+            $id = $cgModel->create($_POST);
+            if ($id) {
+                FlashMessage::set('message', 'ضمانت‌نامه / تضامین با موفقیت ثبت شد.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ثبت ضمانت‌نامه.', 'error');
+            }
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=contract_guarantees');
+    }
+
+    public function updateGuaranteeStatus() {
+        $id = $_GET['id'] ?? null;
+        $status = $_GET['status'] ?? 'released';
+        if ($id) {
+            require_once __DIR__ . '/../models/ContractGuarantee.php';
+            $cgModel = new ContractGuarantee();
+            $cgModel->updateStatus($id, $status);
+            FlashMessage::set('message', 'وضعیت ضمانت‌نامه با موفقیت بروز شد.', 'success');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=contract_guarantees');
+    }
+
+    // =========================================================================
+    // ۶. دستیار هوش مصنوعی و تحلیل‌گر سازمانی (Hamakar AI Analytics & OCR)
+    // =========================================================================
+    public function aiAnalytics() {
+        require_once __DIR__ . '/../lib/AiAnalyticsService.php';
+        $aiService = new AiAnalyticsService();
+        $insights = $aiService->getExecutiveInsights();
+
+        $ocrResult = null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['invoice_scan'])) {
+            $ocrResult = $aiService->simulateInvoiceOcr($_FILES['invoice_scan']['name']);
+        }
+
+        view('admin/ai/analytics', [
+            'layout' => 'admin_layout',
+            'title' => 'دستیار هوش مصنوعی و تحلیل مالی سازمانی',
+            'insights' => $insights,
+            'ocrResult' => $ocrResult
+        ]);
+    }
+
+    // =========================================================================
+    // ۷. موتور اتوماسیون گردش کار شرطی (Workflow Automation Engine)
+    // =========================================================================
+    public function workflowRules() {
+        require_once __DIR__ . '/../models/WorkflowRule.php';
+        $wfModel = new WorkflowRule();
+        $rules = $wfModel->getAll();
+
+        view('admin/settings/workflows', [
+            'layout' => 'admin_layout',
+            'title' => 'موتور اتوماسیون گردش کار و قوانین شرطی',
+            'rules' => $rules
+        ]);
+    }
+
+    public function storeWorkflowRule() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/WorkflowRule.php';
+            $wfModel = new WorkflowRule();
+            $wfModel->create($_POST);
+            FlashMessage::set('message', 'قانون اتوماسیون با موفقیت ایجاد گردید.', 'success');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=workflow_rules');
+    }
+
+    public function toggleWorkflowRule() {
+        $id = $_GET['id'] ?? null;
+        if ($id) {
+            require_once __DIR__ . '/../models/WorkflowRule.php';
+            $wfModel = new WorkflowRule();
+            $wfModel->toggle($id);
+            FlashMessage::set('message', 'وضعیت قانون اتوماسیون تغییر یافت.', 'success');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=workflow_rules');
+    }
+
 }

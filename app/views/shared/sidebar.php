@@ -143,6 +143,7 @@ $isHRActive = in_array($currentTitle, $hr_titles) || in_array($currentTitle, ['�
                     <ul class="sidebar-submenu">
                         <li><a class="submenu-item" href="index.php?page=admin&action=clients">لیست مشتریان</a></li>
                         <li><a class="submenu-item" href="index.php?page=admin&action=contracts">قراردادها</a></li>
+                        <li><a class="submenu-item" href="index.php?page=admin&action=contract_guarantees">تضامین و ضمانت‌نامه‌ها</a></li>
                         <li><a class="submenu-item" href="index.php?page=admin&action=invoices">فاکتورها</a></li>
                     </ul>
                 </div>
@@ -173,7 +174,22 @@ $isHRActive = in_array($currentTitle, $hr_titles) || in_array($currentTitle, ['�
                         <hr class="dropdown-divider">
                         <li><a class="submenu-item" href="index.php?page=sales&action=index">مدیریت فروش‌ها</a></li>
                         <li><a class="submenu-item" href="index.php?page=purchases&action=index">مدیریت خریدها</a></li>
+                        <li><a class="submenu-item" href="index.php?page=admin&action=procurement_requisitions">درخواست‌های خرید و تدارکات</a></li>
                        
+                    </ul>
+                </div>
+            </li>
+
+            
+            <!-- ماژول تولید و بهای تمام‌شده -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#collapseManufacturing" data-bs-toggle="collapse">
+                    <i class="fas fa-fw fa-industry text-warning"></i><span>تولید و بهای تمام‌شده</span>
+                </a>
+                <div id="collapseManufacturing" class="collapse">
+                    <ul class="sidebar-submenu">
+                        <li><a class="submenu-item" href="index.php?page=admin&action=boms">فرمول‌های ساخت (BOM)</a></li>
+                        <li><a class="submenu-item" href="index.php?page=admin&action=production_orders">دستورات تولید</a></li>
                     </ul>
                 </div>
             </li>
@@ -187,6 +203,10 @@ $isHRActive = in_array($currentTitle, $hr_titles) || in_array($currentTitle, ['�
                 <div id="collapseAccounting" class="collapse <?php echo $isAccountingActive ? 'show' : ''; ?>">
                     <ul class="sidebar-submenu">
                         <?php if ($auth->hasRole(['admin', 'accountant'])): ?>
+                            <li><a class="submenu-item text-primary fw-bold" href="index.php?page=admin&action=moadian_invoices"><i class="fas fa-file-invoice-dollar me-1"></i>سامانه مودیان مالیاتی</a></li>
+                            <li><a class="submenu-item" href="index.php?page=admin&action=treasury_cheques">خزانه‌داری و چک‌های صیادی</a></li>
+                            <li><a class="submenu-item" href="index.php?page=admin&action=treasury_rasgiri">ماشین‌حساب راس‌گیری</a></li>
+                            <hr class="dropdown-divider">
                             <li><a class="submenu-item" href="index.php?page=admin&action=accounting_accounts">کدینگ حسابداری</a></li>
                             <li><a class="submenu-item" href="index.php?page=admin&action=create_voucher_form">ثبت سند</a></li>
                             <li><a class="submenu-item" href="index.php?page=admin&action=accounting_expenses">مدیریت هزینه‌ها</a></li>
@@ -260,6 +280,14 @@ $isHRActive = in_array($currentTitle, $hr_titles) || in_array($currentTitle, ['�
                     </ul>
                 </div>
             </li>
+            
+            <!-- دستیار هوش مصنوعی و تحلیل مالی -->
+            <li class="nav-item">
+                <a class="nav-link" href="index.php?page=admin&action=ai_analytics">
+                    <i class="fas fa-fw fa-brain text-info"></i><span>دستیار هوش مصنوعی (AI)</span>
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link collapsed <?php echo $isSystemSettingsActive ? 'active' : ''; ?>" href="#collapseSettings" data-bs-toggle="collapse" aria-expanded="<?php echo $isSystemSettingsActive ? 'true' : 'false'; ?>">
                     <i class="fas fa-fw fa-cogs"></i><span>تنظیمات سیستم</span>
@@ -267,6 +295,7 @@ $isHRActive = in_array($currentTitle, $hr_titles) || in_array($currentTitle, ['�
                 <div id="collapseSettings" class="collapse <?php echo $isSystemSettingsActive ? 'show' : ''; ?>">
                     <ul class="sidebar-submenu">
                         <li><a class="submenu-item" href="index.php?page=admin&action=showApiSettings">مدیریت کلیدهای API</a></li>
+                        <li><a class="submenu-item" href="index.php?page=admin&action=workflow_rules">اتوماسیون گردش کار</a></li>
                         <li><a class="submenu-item" href="#">تنظیمات عمومی</a></li>
                         <li><a class="submenu-item" href="#">نقش‌ها و دسترسی‌ها</a></li>
                     </ul>
@@ -309,6 +338,7 @@ $isHRActive = in_array($currentTitle, $hr_titles) || in_array($currentTitle, ['�
             <li class="nav-item"><a class="nav-link" href="index.php?page=client&action=dashboard"><i class="fas fa-fw fa-tachometer-alt"></i><span>داشبورد</span></a></li>
             <li class="nav-item"><a class="nav-link" href="index.php?page=client&action=my_contracts"><i class="fas fa-fw fa-file-signature"></i><span>قراردادهای من</span></a></li>
             <li class="nav-item"><a class="nav-link" href="index.php?page=client&action=my_invoices"><i class="fas fa-fw fa-file-invoice"></i><span>فاکتورهای من</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="index.php?page=client&action=statement"><i class="fas fa-fw fa-file-invoice-dollar text-success"></i><span>صورت‌حساب مالی من</span></a></li>
             <li class="nav-item"><a class="nav-link" href="index.php?page=client&action=my_projects"><i class="fas fa-fw fa-project-diagram"></i><span>پروژه‌های من</span></a></li>
             
             <li class="nav-item">
