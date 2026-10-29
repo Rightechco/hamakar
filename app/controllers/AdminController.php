@@ -4763,4 +4763,123 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         redirect(APP_URL . '/index.php?page=admin&action=workflow_rules');
     }
 
+
+    // =========================================================================
+    // ۳. مدیریت جامع تنظیمات سامانه و پشتیبان‌گیری فیزیکی و ابری (System Settings & Backup)
+    // =========================================================================
+    public function systemSettings() {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/SystemSetting.php';
+        $settingModel = new SystemSetting();
+        $settings = $settingModel->getAll();
+
+        view('admin/settings/system_settings', [
+            'layout' => 'admin_layout',
+            'title' => 'تنظیمات یکپارچه سامانه هماکار',
+            'settings' => $settings
+        ]);
+    }
+
+    public function saveSystemSettings() {
+        $this->auth->restrict(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/SystemSetting.php';
+            $settingModel = new SystemSetting();
+            if ($settingModel->saveBulk($_POST)) {
+                FlashMessage::set('message', 'تنظیمات سامانه با موفقیت به‌روزرسانی گردید.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ذخیره‌سازی تنظیمات.', 'error');
+            }
+            redirect(APP_URL . '/index.php?page=admin&action=system_settings');
+        }
+    }
+
+    public function backupManager() {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/BackupManager.php';
+        $backupManager = new BackupManager();
+        $backups = $backupManager->getAllBackups();
+
+        $totalSize = array_sum(array_map(function($b) { return (int)($b->filesize ?? 0); }, $backups));
+
+        view('admin/settings/backups', [
+            'layout' => 'admin_layout',
+            'title' => 'مدیریت پشتیبان‌گیری فیزیکی و هاست ابری',
+            'backups' => $backups,
+            'totalSize' => $totalSize
+        ]);
+    }
+
+    public function createCloudBackup() {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/BackupManager.php';
+        $backupManager = new BackupManager();
+        $res = $backupManager->createCloudBackup('manual', $this->auth->user()->name ?? 'مدیر سامانه');
+        if ($res['success']) {
+            FlashMessage::set('message', $res['message'], 'success');
+        } else {
+            FlashMessage::set('message', $res['message'], 'error');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=backups');
+    }
+
+    public function downloadPhysicalBackup() {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/BackupManager.php';
+        $backupManager = new BackupManager();
+        $backupManager->downloadPhysicalBackup();
+    }
+
+    public function downloadCloudBackup($id) {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/BackupManager.php';
+        $backupManager = new BackupManager();
+        $backupManager->downloadBackupById($id);
+    }
+
+    public function restoreBackup($id) {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/BackupManager.php';
+        $backupManager = new BackupManager();
+        $res = $backupManager->restoreBackupById($id);
+        if ($res['success']) {
+            FlashMessage::set('message', $res['message'], 'success');
+        } else {
+            FlashMessage::set('message', $res['message'], 'error');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=backups');
+    }
+
+    public function restoreUploadedBackup() {
+        $this->auth->restrict(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['backup_file'])) {
+            $file = $_FILES['backup_file'];
+            if ($file['error'] === UPLOAD_ERR_OK && is_uploaded_file($file['tmp_name'])) {
+                $content = file_get_contents($file['tmp_name']);
+                require_once __DIR__ . '/../models/BackupManager.php';
+                $backupManager = new BackupManager();
+                $res = $backupManager->restoreFromSql($content);
+                if ($res['success']) {
+                    FlashMessage::set('message', $res['message'], 'success');
+                } else {
+                    FlashMessage::set('message', $res['message'], 'error');
+                }
+            } else {
+                FlashMessage::set('message', 'خطا در بارگذاری فایل پشتیبان.', 'error');
+            }
+            redirect(APP_URL . '/index.php?page=admin&action=backups');
+        }
+    }
+
+    public function deleteCloudBackup($id) {
+        $this->auth->restrict(['admin']);
+        require_once __DIR__ . '/../models/BackupManager.php';
+        $backupManager = new BackupManager();
+        if ($backupManager->deleteBackupById($id)) {
+            FlashMessage::set('message', 'فایل نسخه پشتیبان با موفقیت از هاست حذف شد.', 'success');
+        } else {
+            FlashMessage::set('message', 'خطا در حذف فایل پشتیبان.', 'error');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=backups');
+    }
 }

@@ -961,6 +961,21 @@ main {
             </div>
         </a>
 
+        <a href="index.php?page=admin&action=system_settings" class="suha-module-card" data-title="تنظیمات سامانه">
+            <div class="suha-module-icon" style="background:#f1f5f9; color:#475569;"><i class="fas fa-sliders-h"></i></div>
+            <div class="suha-module-info">
+                <div class="suha-module-title">تنظیمات سامانه</div>
+                <div class="suha-module-desc">هویت، مالی و حالت آفلاین</div>
+            </div>
+        </a>
+
+        <a href="index.php?page=admin&action=backups" class="suha-module-card" data-title="پشتیبان‌گیری فیزیکی و هاست">
+            <div class="suha-module-icon" style="background:#ecfdf5; color:#059669;"><i class="fas fa-database"></i></div>
+            <div class="suha-module-info">
+                <div class="suha-module-title">پشتیبان‌گیری</div>
+                <div class="suha-module-desc">دانلود فیزیکی و ابری هاست</div>
+            </div>
+        </a>
     </div>
 </div>
 
@@ -1030,5 +1045,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<?php include __DIR__ . '/../shared/offline_sync_widget.php'; ?>
 </body>
 </html>

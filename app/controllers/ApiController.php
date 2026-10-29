@@ -428,4 +428,68 @@ class ApiController {
             ]
         ]);
     }
+
+    /**
+     * همگام‌سازی دسته‌ای داده‌ها و فاکتورهای صادر شده در حالت آفلاین
+     * POST /index.php?page=api&action=sync_offline_data
+     */
+    public function sync_offline_data() {
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true) ?: $_POST;
+        $items = $payload['items'] ?? [];
+
+        if (empty($items) || !is_array($items)) {
+            $this->response(400, ['success' => false, 'message' => 'داده‌ای در صف آفلاین ارسال نشده است.']);
+        }
+
+        $syncedIds = [];
+        $settings = $this->moadianModel->getSettings();
+
+        foreach ($items as $it) {
+            $clientId = (int)($it['client_id'] ?? 1);
+            $subtotal = (float)($it['subtotal'] ?? $it['total_amount'] ?? 0);
+            $isOfficial = isset($it['is_official']) ? (int)$it['is_official'] : 1;
+            $taxRate = $isOfficial ? (float)($it['vat_rate'] ?? $settings->tax_rate) : 0;
+            $vatAmount = round(($subtotal * $taxRate) / 100);
+            $totalAmount = $subtotal + $vatAmount;
+            $invNum = $it['invoice_number'] ?? ('OFFLINE-' . date('Ymd') . '-' . rand(100, 999));
+
+            $invData = [
+                'invoice_number' => $invNum,
+                'client_id' => $clientId,
+                'contract_id' => $it['contract_id'] ?? null,
+                'invoice_type' => $it['invoice_type'] ?? 'service',
+                'is_official' => $isOfficial,
+                'issue_date' => $it['issue_date'] ?? date('Y-m-d'),
+                'due_date' => $it['due_date'] ?? date('Y-m-d'),
+                'subtotal' => $subtotal,
+                'vat_amount' => $vatAmount,
+                'total_amount' => $totalAmount,
+                'description' => sanitize($it['description'] ?? 'فاکتور صادر شده در حالت آفلاین (همگام‌سازی شده خودکار)'),
+                'status' => 'pending',
+                'economic_code' => sanitize($it['economic_code'] ?? ''),
+                'national_id' => sanitize($it['national_id'] ?? ''),
+                'pattern_type' => (int)($it['pattern_type'] ?? 1)
+            ];
+
+            $invId = $this->invoiceModel->create($invData);
+            if ($invId) {
+                // اگر رسمی بود، در مودیان ثبت و ارسال کن
+                if ($isOfficial) {
+                    $mId = $this->moadianModel->createFromInvoice($invId, $invData['pattern_type']);
+                    if ($mId) {
+                        $this->moadianModel->transmitToTaxAuthority($mId);
+                    }
+                }
+                $syncedIds[] = $invId;
+            }
+        }
+
+        $this->response(200, [
+            'success' => true,
+            'message' => count($syncedIds) . ' عملیات آفلاین با موفقیت همگام‌سازی و در پایگاه داده ثبت گردید.',
+            'synced_count' => count($syncedIds),
+            'synced_ids' => $syncedIds
+        ]);
+    }
 }

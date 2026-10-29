@@ -1,0 +1,27 @@
+{
+  "name": "سامانه مدیریت سازمانی و ERP هماکار",
+  "short_name": "هماکار ERP",
+  "description": "نسل نوین نرم‌افزار سازمانی، مالی و سامانه مودیان با کارکرد کاملاً آفلاین",
+  "start_url": "/index.php?page=admin&action=dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "any",
+  "dir": "rtl",
+  "lang": "fa-IR",
+  "icons": [
+    {
+      "src": "/assets/img/mohesen-logo.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/img/mohesen-logo.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}

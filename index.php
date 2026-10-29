@@ -215,6 +215,20 @@ switch ($page) {
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
             case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
+            // --- تنظیمات سامانه و پشتیبان‌گیری ---
+            case 'system_settings':
+            case 'systemSettings': $targetMethod = 'systemSettings'; break;
+            case 'save_system_settings': $targetMethod = 'saveSystemSettings'; break;
+            
+            case 'backups':
+            case 'backup_manager': $targetMethod = 'backupManager'; break;
+            case 'create_cloud_backup': $targetMethod = 'createCloudBackup'; break;
+            case 'download_physical_backup': $targetMethod = 'downloadPhysicalBackup'; break;
+            case 'download_cloud_backup': $targetMethod = 'downloadCloudBackup'; $hasParam = true; break;
+            case 'restore_backup': $targetMethod = 'restoreBackup'; $hasParam = true; break;
+            case 'restore_uploaded_backup': $targetMethod = 'restoreUploadedBackup'; break;
+            case 'delete_cloud_backup': $targetMethod = 'deleteCloudBackup'; $hasParam = true; break;
+            
             case 'treasury_cheques':
             case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
             case 'create_cheque': $targetMethod = 'createCheque'; break;
@@ -548,6 +562,20 @@ switch ($page) {
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
             case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
+            // --- تنظیمات سامانه و پشتیبان‌گیری ---
+            case 'system_settings':
+            case 'systemSettings': $targetMethod = 'systemSettings'; break;
+            case 'save_system_settings': $targetMethod = 'saveSystemSettings'; break;
+            
+            case 'backups':
+            case 'backup_manager': $targetMethod = 'backupManager'; break;
+            case 'create_cloud_backup': $targetMethod = 'createCloudBackup'; break;
+            case 'download_physical_backup': $targetMethod = 'downloadPhysicalBackup'; break;
+            case 'download_cloud_backup': $targetMethod = 'downloadCloudBackup'; $hasParam = true; break;
+            case 'restore_backup': $targetMethod = 'restoreBackup'; $hasParam = true; break;
+            case 'restore_uploaded_backup': $targetMethod = 'restoreUploadedBackup'; break;
+            case 'delete_cloud_backup': $targetMethod = 'deleteCloudBackup'; $hasParam = true; break;
+            
             case 'treasury_cheques':
             case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
             case 'create_cheque': $targetMethod = 'createCheque'; break;
@@ -617,6 +645,20 @@ switch ($page) {
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
             case 'api_docs': $targetMethod = 'showApiDocs'; break;
+            
+            // --- تنظیمات سامانه و پشتیبان‌گیری ---
+            case 'system_settings':
+            case 'systemSettings': $targetMethod = 'systemSettings'; break;
+            case 'save_system_settings': $targetMethod = 'saveSystemSettings'; break;
+            
+            case 'backups':
+            case 'backup_manager': $targetMethod = 'backupManager'; break;
+            case 'create_cloud_backup': $targetMethod = 'createCloudBackup'; break;
+            case 'download_physical_backup': $targetMethod = 'downloadPhysicalBackup'; break;
+            case 'download_cloud_backup': $targetMethod = 'downloadCloudBackup'; $hasParam = true; break;
+            case 'restore_backup': $targetMethod = 'restoreBackup'; $hasParam = true; break;
+            case 'restore_uploaded_backup': $targetMethod = 'restoreUploadedBackup'; break;
+            case 'delete_cloud_backup': $targetMethod = 'deleteCloudBackup'; $hasParam = true; break;
             
             case 'treasury_cheques':
             case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
