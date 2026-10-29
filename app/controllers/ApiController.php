@@ -243,14 +243,19 @@ class ApiController {
             if ($c) {
                 $clientId = $c->id;
             } else {
-                $this->db->query("INSERT INTO clients (name, economic_code, national_code, phone) 
-                                  VALUES (:nm, :ec, :nid, :ph)");
-                $this->db->bind(':nm', sanitize($payload['customer_name']));
-                $this->db->bind(':ec', sanitize($payload['customer_economic_code'] ?? ''));
-                $this->db->bind(':nid', sanitize($payload['customer_national_id'] ?? ''));
-                $this->db->bind(':ph', sanitize($payload['customer_phone'] ?? ''));
-                $this->db->execute();
-                $clientId = $this->db->lastInsertId();
+                $isLegal = !empty($payload['customer_economic_code']) || strlen($payload['customer_national_id'] ?? '') === 11;
+                $clientId = $this->clientModel->create([
+                    'name' => sanitize($payload['customer_name']),
+                    'contact_person' => sanitize($payload['customer_name']),
+                    'company_name' => sanitize($payload['customer_name']),
+                    'user_type' => $isLegal ? 'legal' : 'real',
+                    'client_type' => 'customer',
+                    'national_code' => sanitize($payload['customer_national_id'] ?? ''),
+                    'economic_code' => sanitize($payload['customer_economic_code'] ?? ''),
+                    'email' => 'client_' . time() . '_' . rand(100, 999) . '@hamakar.ir',
+                    'phone' => sanitize($payload['customer_phone'] ?? '04134401179'),
+                    'address' => sanitize($payload['customer_address'] ?? 'ثبت شده توسط وب‌سرویس حسابداری')
+                ]);
             }
         }
 
