@@ -1,33 +1,30 @@
 <?php
-// app/views/layouts/admin_layout.php - نسخه نهایی و اصلاح شده
+// app/views/layouts/admin_layout.php - نسخه تجاری نیتیو هماکار ERP
 global $auth;
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Suha & Nuxt Mobile App & PWA Settings -->
-    <meta name="theme-color" content="#2c3e50">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="https://hamakar.ir/manifest.webmanifest">
     <link rel="apple-touch-icon" href="https://hamakar.ir/images/apple-touch-icon.png">
     <link rel="icon" type="image/png" href="https://hamakar.ir/images/favicon-32x32.png">
 
-    <title><?php echo sanitize($title ?? 'پنل مدیریت'); ?> - رایان تکرو</title>
+    <title><?php echo sanitize($title ?? 'پنل مدیریت'); ?> - هماکار ERP</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <link href="<?php echo APP_URL; ?>/assets/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?php echo APP_URL; ?>/assets/css/styles.css?v=3.5.0" rel="stylesheet">
-    
+    <link href="<?php echo APP_URL; ?>/assets/css/styles.css?v=4.0.0" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css" rel="stylesheet"/>
     
     <style>
 /* ==========================================================================
-   Nuxt 3 & Modern SaaS Commercial Masterpiece Design System for Hamakar ERP
+   Comprehensive Nuxt 3 & Suha Native Commercial Masterpiece for Hamakar
    ========================================================================== */
 
 :root {
@@ -37,37 +34,23 @@ global $auth;
     --primary-border: #c7d2fe;
     --primary-glow: rgba(79, 70, 229, 0.16);
 
-    --secondary: #0f172a;
-    --secondary-light: #1e293b;
-    --accent: #06b6d4;
-    
-    --success: #10b981;
-    --success-light: #ecfdf5;
-    --success-border: #a7f3d0;
-    
-    --warning: #f59e0b;
-    --warning-light: #fffbeb;
-    --warning-border: #fde68a;
-    
-    --danger: #ef4444;
-    --danger-light: #fef2f2;
-    --danger-border: #fecaca;
-    
-    --info: #0284c7;
-    --info-light: #f0f9ff;
-    --info-border: #bae6fd;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #94a3b8;
+    --sidebar-icon: #64748b;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+    --sidebar-active-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    --sidebar-active-text: #ffffff;
+    --sidebar-heading: #64748b;
 
+    --navbar-bg: rgba(255, 255, 255, 0.94);
     --bg-body: #f8fafc;
     --bg-surface: #ffffff;
     --bg-subtle: #f1f5f9;
 
     --text-main: #0f172a;
     --text-muted: #64748b;
-    --text-light: #94a3b8;
-
     --border-color: #e2e8f0;
     --border-subtle: #f1f5f9;
-    --border-hover: #cbd5e1;
 
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -75,13 +58,15 @@ global $auth;
     --radius-xl: 24px;
     --radius-full: 9999px;
 
-    --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+    --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04);
     --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-    --shadow-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
-    --shadow-focus: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    --shadow-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.08);
 }
 
-/* Global Font & Reset */
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--bg-body) !important;
     color: var(--text-main) !important;
@@ -92,63 +77,267 @@ body {
     line-height: 1.6;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
 }
 
 a {
     text-decoration: none;
     color: var(--primary);
-    transition: color 0.2s;
-}
-
-a:hover {
-    color: var(--primary-hover);
-    text-decoration: none;
 }
 
 /* ==========================================================================
-   1. Nuxt 3 Cards & Surfaces
+   1. Master Layout Shell (Sidebar, Content & Overlay)
+   ========================================================================== */
+.wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    align-items: stretch;
+    position: relative;
+}
+
+#sidebar {
+    min-width: 260px;
+    max-width: 260px;
+    background: var(--sidebar-bg);
+    color: #fff;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1030;
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar.toggled {
+    margin-right: -260px;
+}
+
+#content-wrapper {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-body);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+main {
+    padding: 1.75rem 2rem 100px;
+    flex: 1;
+}
+
+.content-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1055;
+    display: none;
+}
+
+.sidebar-header { 
+    padding: 22px 20px; 
+    text-align: center; 
+    font-size: 19px; 
+    font-weight: 800; 
+    color: #fff; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.sidebar-header i { color: #4f46e5; }
+
+.sidebar-nav {
+    padding: 15px 0;
+    list-style: none;
+    margin: 0;
+}
+
+.sidebar-nav .nav-item .nav-link {
+    display: flex; 
+    align-items: center; 
+    padding: 10px 18px;
+    color: var(--sidebar-text); 
+    border-radius: 12px;
+    margin: 3px 12px; 
+    text-decoration: none; 
+    font-weight: 600;
+    font-size: 0.88rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-nav .nav-link i {
+    width: 20px;
+    margin-left: 14px;
+    font-size: 1rem;
+    color: var(--sidebar-icon);
+}
+
+.sidebar-nav .nav-link:hover { 
+    background-color: var(--sidebar-hover-bg); 
+    color: #fff; 
+    transform: translateX(-2px);
+}
+
+.sidebar-nav .nav-link.active { 
+    background: var(--sidebar-active-bg); 
+    color: var(--sidebar-active-text); 
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+}
+
+.sidebar-heading { 
+    padding: 1.25rem 1.5rem 0.4rem; 
+    font-size: 0.74rem; 
+    color: var(--sidebar-heading); 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+    font-weight: 800;
+}
+
+.sidebar-submenu { 
+    background-color: rgba(0,0,0,0.2); 
+    padding-left: 0; 
+    list-style: none; 
+    margin: 4px 12px; 
+    border-radius: 10px; 
+    overflow: hidden; 
+}
+
+.sidebar-submenu .submenu-item { 
+    display: block; 
+    padding: 9px 20px 9px 15px; 
+    color: var(--sidebar-text); 
+    text-decoration: none; 
+    font-size: 0.84rem; 
+    font-weight: 500; 
+    transition: all 0.15s; 
+}
+
+.sidebar-submenu .submenu-item:hover { 
+    background-color: rgba(255,255,255,0.06); 
+    color: #fff; 
+}
+
+/* CRITICAL MOBILE SIDEBAR BEHAVIOR (MUST HIDE OFF-SCREEN) */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        width: 275px !important;
+        max-width: 85vw !important;
+        margin-right: 0 !important;
+        transform: translateX(105%) !important;
+        z-index: 1060 !important;
+        box-shadow: -8px 0 30px rgba(0,0,0,0.35) !important;
+    }
+    
+    #sidebar.toggled {
+        transform: translateX(0) !important;
+    }
+
+    .content-overlay.active {
+        display: block !important;
+    }
+
+    main {
+        padding: 1rem 0.85rem 100px !important;
+    }
+}
+
+/* ==========================================================================
+   2. Nuxt 3 Cards, KPI Widgets & Surfaces
    ========================================================================== */
 .card, .card-modern, .stat-card {
-    background: var(--bg-surface) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: var(--radius-lg) !important;
-    box-shadow: var(--shadow-card) !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04) !important;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     overflow: hidden;
+    margin-bottom: 1.25rem;
 }
 
 .card:hover {
-    box-shadow: var(--shadow-hover) !important;
-    border-color: var(--border-hover) !important;
+    box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.08) !important;
+    border-color: #cbd5e1 !important;
 }
 
 .card-header {
-    background: var(--bg-surface) !important;
-    border-bottom: 1px solid var(--border-subtle) !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     padding: 1.15rem 1.4rem !important;
     font-weight: 800 !important;
     font-size: 0.95rem !important;
-    color: var(--text-main) !important;
+    color: #0f172a !important;
 }
 
 .card-body {
     padding: 1.4rem !important;
 }
 
-.card-footer {
-    background: #fafbfc !important;
-    border-top: 1px solid var(--border-subtle) !important;
-    padding: 1rem 1.4rem !important;
+.nuxt-kpi-card {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 20px !important;
+    padding: 1.35rem 1.4rem !important;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.nuxt-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.08) !important;
+    border-color: #c7d2fe !important;
+}
+
+.nuxt-kpi-icon {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.35rem !important;
+    flex-shrink: 0;
+}
+
+.nuxt-kpi-value {
+    font-size: 1.75rem !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.5px !important;
+}
+
+.nuxt-kpi-label {
+    font-size: 0.85rem !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.35rem !important;
 }
 
 /* ==========================================================================
-   2. Nuxt 3 Tables & Data Grids
+   3. Nuxt 3 Tables & Data Grids
    ========================================================================== */
 .table-responsive, .table-responsive-modern {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-bottom: 1.5rem;
@@ -174,7 +363,7 @@ a:hover {
     letter-spacing: -0.2px !important;
     text-transform: uppercase !important;
     padding: 1rem 1.15rem !important;
-    border-bottom: 1.5px solid var(--border-color) !important;
+    border-bottom: 1.5px solid #e2e8f0 !important;
     border-top: none !important;
     white-space: nowrap !important;
 }
@@ -182,9 +371,9 @@ a:hover {
 .table tbody td {
     padding: 1rem 1.15rem !important;
     font-size: 0.885rem !important;
-    color: var(--text-main) !important;
-    border-bottom: 1px solid var(--border-subtle) !important;
-    background: var(--bg-surface);
+    color: #0f172a !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    background: #ffffff;
     transition: background-color 0.15s ease;
     vertical-align: middle;
 }
@@ -203,95 +392,29 @@ a:hover {
 }
 
 /* ==========================================================================
-   3. Nuxt 3 Inputs & Form Controls
+   4. Form Controls & Buttons
    ========================================================================== */
 .form-control, .form-select, input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
     background-color: #f8fafc !important;
     border: 1.5px solid #cbd5e1 !important;
-    border-radius: var(--radius-md) !important;
+    border-radius: 12px !important;
     padding: 0.65rem 1rem !important;
     font-size: 0.885rem !important;
     font-family: inherit !important;
-    color: var(--text-main) !important;
+    color: #0f172a !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-shadow: none !important;
 }
 
 .form-control:focus, .form-select:focus, input:focus, select:focus, textarea:focus {
     background-color: #ffffff !important;
-    border-color: var(--primary) !important;
-    box-shadow: var(--shadow-focus) !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12) !important;
     outline: none !important;
 }
 
-.form-label, label {
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    color: #334155 !important;
-    margin-bottom: 0.45rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 0.4rem !important;
-}
-
-#filter-form, .filter-box, form.p-3.bg-light {
-    background: #ffffff !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: var(--radius-lg) !important;
-    box-shadow: var(--shadow-subtle) !important;
-    padding: 1.25rem 1.4rem !important;
-    margin-bottom: 1.5rem !important;
-}
-
-/* ==========================================================================
-   4. Nuxt 3 Badges & Pills
-   ========================================================================== */
-.badge {
-    border-radius: var(--radius-full) !important;
-    font-weight: 700 !important;
-    font-size: 0.74rem !important;
-    padding: 0.35rem 0.8rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 0.35rem !important;
-    letter-spacing: -0.2px !important;
-}
-
-.badge.bg-success, .badge.badge-success {
-    background: var(--success-light) !important;
-    color: #065f46 !important;
-    border: 1px solid var(--success-border) !important;
-}
-
-.badge.bg-warning, .badge.badge-warning {
-    background: var(--warning-light) !important;
-    color: #92400e !important;
-    border: 1px solid var(--warning-border) !important;
-}
-
-.badge.bg-danger, .badge.badge-danger {
-    background: var(--danger-light) !important;
-    color: #991b1b !important;
-    border: 1px solid var(--danger-border) !important;
-}
-
-.badge.bg-primary, .badge.badge-primary, .badge.bg-info, .badge.badge-info {
-    background: var(--primary-light) !important;
-    color: #3730a3 !important;
-    border: 1px solid var(--primary-border) !important;
-}
-
-.badge.bg-secondary, .badge.bg-light {
-    background: #f1f5f9 !important;
-    color: #475569 !important;
-    border: 1px solid var(--border-color) !important;
-}
-
-/* ==========================================================================
-   5. Nuxt 3 Buttons
-   ========================================================================== */
 .btn {
-    border-radius: var(--radius-md) !important;
+    border-radius: 12px !important;
     font-weight: 700 !important;
     font-size: 0.84rem !important;
     padding: 0.55rem 1.15rem !important;
@@ -307,10 +430,10 @@ a:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
     border: none !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 14px var(--primary-glow) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.22) !important;
 }
 
 .btn-primary:hover {
@@ -318,27 +441,24 @@ a:hover {
     box-shadow: 0 6px 18px rgba(79, 70, 229, 0.32) !important;
 }
 
-.btn-success {
-    background: linear-gradient(135deg, var(--success) 0%, #059669 100%) !important;
-    border: none !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22) !important;
-}
-
 .btn-outline-primary {
-    background: var(--primary-light) !important;
-    color: var(--primary) !important;
-    border: 1.5px solid var(--primary-border) !important;
+    background: #eef2ff !important;
+    color: #4f46e5 !important;
+    border: 1.5px solid #c7d2fe !important;
 }
 
-.btn-outline-primary:hover {
-    background: var(--primary) !important;
-    color: #ffffff !important;
-    border-color: var(--primary) !important;
+.badge {
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    font-size: 0.74rem !important;
+    padding: 0.35rem 0.8rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
 }
 
 /* ==========================================================================
-   6. Suha Native Slide-up Bottom Sheet Drawer (Commercial Masterpiece)
+   5. Suha Native Slide-up Bottom Sheet Drawer (Commercial Masterpiece)
    ========================================================================== */
 .suha-sheet-backdrop {
     position: fixed;
@@ -386,11 +506,6 @@ a:hover {
     border-radius: 10px;
     margin: 14px auto 8px;
     cursor: pointer;
-    transition: background 0.2s;
-}
-
-.suha-sheet-handle:hover {
-    background: #94a3b8;
 }
 
 .suha-sheet-header {
@@ -477,7 +592,7 @@ a:hover {
 
 .suha-module-card {
     background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1.5px solid #e2e8f0 !important;
     border-radius: 18px !important;
     padding: 1rem 1.1rem !important;
     display: flex !important;
@@ -539,7 +654,7 @@ a:hover {
 }
 
 /* ==========================================================================
-   7. Suha Mobile App Bottom Navigation Bar
+   6. Suha Mobile App Bottom Navigation Bar
    ========================================================================== */
 .admin-suha-bottom-nav {
     display: none;
@@ -597,7 +712,6 @@ a:hover {
     color: #4f46e5 !important;
 }
 
-/* Floating Action Center Button for Modules */
 .admin-suha-fab {
     width: 52px;
     height: 52px;
@@ -643,19 +757,32 @@ a:hover {
 
 @media (max-width: 768px) {
     .admin-suha-bottom-nav { display: flex !important; }
-    main { padding: 1.25rem 1rem 90px !important; }
+    main { padding: 1rem 0.85rem 100px !important; }
     .chat-widget-toggler { bottom: 80px !important; }
     .chat-window { bottom: 150px !important; }
+
+    .dashboard-header-actions {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.45rem !important;
+    }
+    .dashboard-header-actions .btn {
+        width: 100% !important;
+        padding: 0.55rem 0.35rem !important;
+        font-size: 0.74rem !important;
+        white-space: nowrap !important;
+    }
 }
 
-</style>
+    </style>
 </head>
 <body>
 
 <div class="wrapper">
     <?php include_once __DIR__ . '/../shared/sidebar.php'; ?>
     <div id="content-wrapper">
-        <div class="content-overlay" id="content-overlay"></div>
+        <div class="content-overlay" id="content-overlay" onclick="toggleSidebarMenu()"></div>
         <?php include_once __DIR__ . '/../shared/navbar.php'; ?>
         <main>
             <?php FlashMessage::display(); ?>
@@ -663,214 +790,6 @@ a:hover {
         </main>
     </div>
 </div>
-
-<div class="chat-widget-toggler" id="chat-toggler"><i class="fas fa-comments"></i></div>
-<div class="chat-window" id="chat-window">
-    <div id="user-list-view" style="height: 100%; display: flex; flex-direction: column;">
-        <div class="chat-header">انتخاب کاربر برای چت</div>
-        <div class="chat-body" id="user-list-body" style="padding:0;">
-            <ul class="chat-user-list" id="chat-user-list"></ul>
-        </div>
-    </div>
-    <div id="conversation-view" style="display: none; height: 100%; flex-direction: column;">
-        <div class="chat-header">
-            <i class="fas fa-arrow-right back-button" id="back-to-users"></i>
-            <span id="chat-partner-name"></span>
-        </div>
-        <div class="chat-body" id="chat-body-conversation"></div>
-        <div class="chat-footer">
-            <form id="chat-form" autocomplete="off">
-                <input type="hidden" id="receiver-id-input">
-                <div class="input-group">
-                    <input type="text" id="chat-message-input" class="form-control" placeholder="پیام خود را بنویسید..." required>
-                    <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-<script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
-
-
-<script type="text/javascript">
-    $(document).ready(function() {
-        $(".persian-datepicker").pDatepicker({
-            format: 'YYYY/MM/DD',
-            autoClose: true,
-            initialValue: false // برای اینکه به طور پیش‌فرض خالی باشد
-        });
-    });
-</script>
-<script>
-    $(document).ready(function () {
-    // --- مدیریت سایدبار ---
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggler = document.getElementById('sidebarToggleTop');
-    const overlay = document.getElementById('content-overlay');
-
-    function toggleSidebar() {
-        sidebar.classList.toggle('toggled');
-        if (window.innerWidth < 768) {
-             overlay.style.display = sidebar.classList.contains('toggled') ? 'block' : 'none';
-        }
-    }
-
-    if (sidebarToggler) {
-        sidebarToggler.addEventListener('click', toggleSidebar);
-    }
-    if (overlay) {
-        overlay.addEventListener('click', toggleSidebar);
-    }
-
-    // --- منطق ویجت چت آنلاین ---
-    const $chatWindow = $('#chat-window');
-    const $chatToggler = $('#chat-toggler');
-    const $conversationView = $('#conversation-view');
-    const $userListView = $('#user-list-view');
-    const $conversationBody = $('#chat-body-conversation');
-    const $chatForm = $('#chat-form');
-    const $messageInput = $('#chat-message-input');
-    const $backToUsersButton = $('#back-to-users');
-    const $userListContainer = $('#chat-user-list');
-
-    let currentPartnerId = null;
-    let lastMessageId = 0;
-    let userListInterval = null;
-    let messageInterval = null;
-
-    function showUserList() {
-        $conversationView.hide();
-        $userListView.show();
-        currentPartnerId = null;
-        
-        if(messageInterval) clearInterval(messageInterval);
-        messageInterval = null;
-
-        loadUsers();
-        if (!userListInterval) {
-            userListInterval = setInterval(loadUsers, 20000);
-        }
-    }
-
-    function showConversation(userId, userName) {
-        if(userListInterval) clearInterval(userListInterval);
-        userListInterval = null;
-        
-        currentPartnerId = userId;
-        lastMessageId = 0;
-        $('#chat-partner-name').text(sanitizeHTML(userName));
-        $('#receiver-id-input').val(userId);
-        $conversationBody.html('');
-        
-        $userListView.hide();
-        $conversationView.css('display', 'flex');
-
-        fetchMessages();
-        if (!messageInterval) {
-            messageInterval = setInterval(fetchMessages, 3000);
-        }
-    }
-
-    function loadUsers() {
-        $.getJSON('<?php echo APP_URL; ?>/index.php?page=ajax&action=get_users', function(response) {
-            if (response.status === 'success' && response.users) {
-                $userListContainer.html('');
-                response.users.forEach(user => {
-                    const userNameSanitized = sanitizeHTML(user.name);
-                    const userHtml = `<li class="chat-user-list-item" data-id="${user.id}" data-name="${userNameSanitized}">
-                                        <img src="https://i.pravatar.cc/40?u=${user.id}" alt="${userNameSanitized}">
-                                        <div class="user-info">
-                                            <span class="user-name">${userNameSanitized}</span>
-                                            <div class="status-text text-${user.status_color}">
-                                                <span class="status-indicator bg-${user.status_color}"></span>
-                                                ${sanitizeHTML(user.online_status)}
-                                            </div>
-                                        </div>
-                                      </li>`;
-                    $userListContainer.append(userHtml);
-                });
-            }
-        });
-    }
-
-    function fetchMessages(isAfterSend = false) {
-        if (!currentPartnerId) return;
-
-        $.getJSON(`<?php echo APP_URL; ?>/index.php?page=ajax&action=fetch_messages&partner_id=${currentPartnerId}&last_id=${lastMessageId}`, function(response) {
-            if (response.status === 'success' && response.messages.length > 0) {
-                response.messages.forEach(msg => {
-                    const messageClass = msg.is_sender ? 'sender' : 'receiver';
-                    const senderName = msg.is_sender ? '' : `<strong>${sanitizeHTML(msg.sender_name)}</strong><br>`;
-                    const messageHtml = `<div class="chat-message ${messageClass}">
-                                            <div class="message-bubble">
-                                                ${senderName}${sanitizeHTML(msg.message_text)}
-                                            </div>
-                                         </div>`;
-                    $conversationBody.append(messageHtml);
-                    lastMessageId = msg.id;
-                });
-                
-                if (isAfterSend || $conversationBody.is(':visible')) {
-                    $conversationBody.scrollTop($conversationBody[0].scrollHeight);
-                }
-            }
-        });
-    }
-
-    function sendMessage(e) {
-        e.preventDefault();
-        const messageText = $messageInput.val().trim();
-        if (messageText === '' || !currentPartnerId) return;
-        
-        $.post('<?php echo APP_URL; ?>/index.php?page=ajax&action=send_message', {
-            message_text: messageText,
-            receiver_id: currentPartnerId
-        }).done(function() {
-            $messageInput.val('');
-            fetchMessages(true);
-        });
-    }
-
-    function sanitizeHTML(str) {
-        var temp = document.createElement('div');
-        temp.textContent = str;
-        return temp.innerHTML;
-    }
-
-    $chatToggler.on('click', function() {
-        $chatWindow.toggleClass('open');
-        if ($chatWindow.hasClass('open')) {
-            showUserList();
-        } else {
-            if (userListInterval) clearInterval(userListInterval);
-            if (messageInterval) clearInterval(messageInterval);
-            userListInterval = null;
-            messageInterval = null;
-        }
-    });
-    
-    $userListContainer.on('click', '.chat-user-list-item', function() {
-        showConversation($(this).data('id'), $(this).data('name'));
-    });
-
-    $backToUsersButton.on('click', showUserList);
-    $chatForm.on('submit', sendMessage);
-});
-</script>
-
-
-<!-- Suha Native Mobile Bottom App Navigation (Commercial Masterpiece) -->
-
-
-<!-- Suha Admin Mobile Bottom Sheet Drawer for all 16 Modules (Ultra-Premium Commercial) -->
-
-
 
 <!-- Suha Native Mobile Bottom App Navigation (Commercial Masterpiece) -->
 <nav class="admin-suha-bottom-nav">
@@ -1045,13 +964,32 @@ a:hover {
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+
 <script>
+function toggleSidebarMenu() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('content-overlay');
+    if (!sidebar) return;
+    
+    sidebar.classList.toggle('toggled');
+    if (overlay) {
+        if (sidebar.classList.contains('toggled')) {
+            overlay.classList.add('active');
+        } else {
+            overlay.classList.remove('active');
+        }
+    }
+}
+
 function toggleAdminModulesDrawer() {
     const backdrop = document.getElementById('admin-sheet-backdrop');
     const drawer = document.getElementById('admin-modules-drawer');
     if (!backdrop || !drawer) return;
     
-    // Haptic feedback
     if (window.navigator && window.navigator.vibrate) {
         window.navigator.vibrate(12);
     }
@@ -1084,7 +1022,13 @@ function filterAdminModulesGrid(query) {
         }
     });
 }
-</script>
 
+document.addEventListener('DOMContentLoaded', function() {
+    const toggler = document.getElementById('sidebarToggleTop');
+    if (toggler) {
+        toggler.addEventListener('click', toggleSidebarMenu);
+    }
+});
+</script>
 </body>
 </html>

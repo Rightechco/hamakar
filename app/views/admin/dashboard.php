@@ -15,7 +15,7 @@
             </h2>
             <p class="text-muted small mb-0">گزارش لحظه‌ای شاخص‌های مالی، کارپوشه مودیان، خزانه‌داری چک و وضعیت عملیاتی</p>
         </div>
-        <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="d-flex align-items-center gap-2 flex-wrap dashboard-header-actions">
             <a href="index.php?page=admin&action=moadianInvoices" class="btn btn-primary px-3 shadow-sm">
                 <i class="fas fa-file-invoice-dollar me-1"></i> سامانه مودیان
             </a>
