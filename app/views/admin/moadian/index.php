@@ -249,6 +249,25 @@ $currentSubject = $currentSubject ?? '';
             </div>
 
             <!-- Invoices Table -->
+            
+            <!-- نوار ابزار خروجی اکسل و PDF کارپوشه مودیان -->
+            <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded-3 border flex-wrap gap-2">
+                <span class="fw-bold small text-dark">
+                    <i class="fas fa-shield-alt text-primary me-1"></i>صورتحساب‌های الکترونیکی سامانه مودیان مالیاتی
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="<?php echo APP_URL; ?>/index.php?page=export&action=excel&type=moadian" class="btn btn-sm btn-outline-success rounded-3 fw-bold shadow-xs">
+                        <i class="fas fa-file-excel text-success me-1"></i> خروجی کامل اکسل
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-3 fw-bold shadow-xs" onclick="HamakarExport.toPdf('#invoices-pane .table-responsive', 'کارپوشه_مودیان', 'صورتحساب‌های الکترونیکی سامانه مودیان مالیاتی')">
+                        <i class="fas fa-file-pdf text-danger me-1"></i> دانلود PDF
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-bold shadow-xs" onclick="HamakarExport.printOfficial('#invoices-pane .table-responsive', 'صورتحساب‌های الکترونیکی سامانه مودیان مالیاتی')">
+                        <i class="fas fa-print text-primary me-1"></i> چاپ رسمی A4
+                    </button>
+                </div>
+            </div>
+
             <div class="moadian-card overflow-hidden">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" style="font-size:0.875rem;">

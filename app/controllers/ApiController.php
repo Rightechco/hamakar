@@ -89,6 +89,10 @@ class ApiController {
      * تست اتصال و سلامت وب‌سرویس
      */
     public function ping() {
+        $licenseDir = __DIR__ . '/../views/admin/license';
+        if (!is_dir($licenseDir)) {
+            @mkdir($licenseDir, 0777, true);
+        }
         $settings = $this->moadianModel->getSettings();
         $this->response(200, [
             'success' => true,

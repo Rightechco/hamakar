@@ -761,6 +761,15 @@ switch ($page) {
         }
         break;
 
+    case 'export':
+        require_once __DIR__ . '/app/controllers/ExportController.php';
+        $controller = new ExportController();
+        switch($action) {
+            case 'excel': $targetMethod = 'excel'; break;
+            default: $targetMethod = 'excel'; break;
+        }
+        break;
+
     case 'ajax':
         $controller = new AjaxController();
         switch($action) {

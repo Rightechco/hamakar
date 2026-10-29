@@ -35,6 +35,25 @@
         </ul>
     </div>
 
+    
+    <!-- نوار ابزار خروجی اکسل و PDF چک‌های صیادی -->
+    <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-white rounded-4 border shadow-sm flex-wrap gap-2">
+        <span class="fw-bold small text-dark">
+            <i class="fas fa-money-check text-primary me-1"></i>دفتر خزانه‌داری و چک‌های صیادی دریافتنی و پرداختنی
+        </span>
+        <div class="d-flex align-items-center gap-2">
+            <a href="<?php echo APP_URL; ?>/index.php?page=export&action=excel&type=cheques" class="btn btn-sm btn-outline-success rounded-3 fw-bold shadow-xs">
+                <i class="fas fa-file-excel text-success me-1"></i> خروجی کامل اکسل
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 fw-bold shadow-xs" onclick="HamakarExport.toPdf('.table-responsive', 'چکهای_صیادی', 'گزارش خزانه‌داری و چک‌های صیادی هماکار')">
+                <i class="fas fa-file-pdf text-danger me-1"></i> دانلود PDF
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-bold shadow-xs" onclick="HamakarExport.printOfficial('.table-responsive', 'گزارش خزانه‌داری و چک‌های صیادی هماکار')">
+                <i class="fas fa-print text-primary me-1"></i> چاپ رسمی A4
+            </button>
+        </div>
+    </div>
+
     <!-- Cheques Table -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
         <div class="table-responsive">

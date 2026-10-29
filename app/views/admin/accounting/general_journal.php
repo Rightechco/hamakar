@@ -1,5 +1,21 @@
 <h1 class="mb-4">گزارش دفتر روزنامه</h1>
 
+
+    <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-white rounded-3 border shadow-sm flex-wrap gap-2">
+        <span class="fw-bold small text-dark"><i class="fas fa-book text-primary me-1"></i>دفتر روزنامه حسابداری</span>
+        <div class="d-flex align-items-center gap-2">
+            <a href="<?php echo APP_URL; ?>/index.php?page=export&action=excel&type=journal" class="btn btn-sm btn-outline-success rounded-3 fw-bold shadow-xs">
+                <i class="fas fa-file-excel text-success me-1"></i> خروجی اکسل دفتر روزنامه
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 fw-bold shadow-xs" onclick="HamakarExport.toPdf('main', 'دفتر_روزنامه', 'گزارش رسمی دفتر روزنامه حسابداری')">
+                <i class="fas fa-file-pdf text-danger me-1"></i> دانلود PDF
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-bold shadow-xs" onclick="HamakarExport.printOfficial('main', 'گزارش رسمی دفتر روزنامه حسابداری')">
+                <i class="fas fa-print text-primary me-1"></i> چاپ رسمی A4
+            </button>
+        </div>
+    </div>
+
 <div class="card shadow mb-4">
     <div class="card-header">
         <h6 class="m-0 font-weight-bold text-primary">فیلتر گزارش</h6>

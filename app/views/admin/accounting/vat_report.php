@@ -57,6 +57,25 @@
         </div>
     </div>
 
+    
+    <!-- نوار ابزار خروجی رسمی ارزش افزوده -->
+    <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-white rounded-4 border shadow-sm flex-wrap gap-2">
+        <span class="fw-bold small text-dark">
+            <i class="fas fa-file-invoice-dollar text-primary me-1"></i>گزارش رسمی مالیات بر ارزش افزوده و فصلی مودیان
+        </span>
+        <div class="d-flex align-items-center gap-2">
+            <a href="<?php echo APP_URL; ?>/index.php?page=export&action=excel&type=vat" class="btn btn-sm btn-outline-success rounded-3 fw-bold shadow-xs">
+                <i class="fas fa-file-excel text-success me-1"></i> خروجی اکسل ارزش افزوده
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 fw-bold shadow-xs" onclick="HamakarExport.toPdf('#vat-report-content, .table-responsive', 'گزارش_ارزش_افزوده', 'گزارش رسمی مالیات بر ارزش افزوده هماکار')">
+                <i class="fas fa-file-pdf text-danger me-1"></i> دانلود PDF
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-bold shadow-xs" onclick="HamakarExport.printOfficial('#vat-report-content, .table-responsive', 'گزارش رسمی مالیات بر ارزش افزوده هماکار')">
+                <i class="fas fa-print text-primary me-1"></i> چاپ رسمی A4
+            </button>
+        </div>
+    </div>
+
     <?php if (isset($reportData)): ?>
     <!-- Summary KPIs -->
     <div class="row g-3 mb-4">
