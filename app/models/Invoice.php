@@ -280,9 +280,9 @@ class Invoice {
                     s.status,
                     'sale' AS type,
                     GROUP_CONCAT(p.name SEPARATOR ', ') AS item_description,
-                    COALESCE(s.is_official, 0) AS is_official,
-                    s.moadian_taxid,
-                    COALESCE(s.moadian_status, 'not_sent') AS moadian_status
+                    0 AS is_official,
+                    NULL AS moadian_taxid,
+                    'not_sent' AS moadian_status
                 FROM sales s
                 JOIN clients c ON s.client_id = c.id
                 LEFT JOIN sale_items si ON s.id = si.sale_id
