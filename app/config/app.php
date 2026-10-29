@@ -1,8 +1,15 @@
 <?php
 // app/config/app.php
 
-define('APP_URL', $_ENV['APP_URL'] ?? 'https://winbo.store');
-define('APP_ENV', $_ENV['APP_ENV'] ?? 'development'); // اینجا تعریف شده
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+    || (!empty($_SERVER['HTTP_CF_VISITOR']) && strpos($_SERVER['HTTP_CF_VISITOR'], 'https') !== false);
+$scheme = $isHttps ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'demo.hamakar.ir';
+$defaultUrl = "$scheme://$host";
+
+define('APP_URL', $_ENV['APP_URL'] ?? $defaultUrl);
+define('APP_ENV', $_ENV['APP_ENV'] ?? 'development');
 define('APP_SECRET', $_ENV['APP_SECRET'] ?? 'your_super_secret_key_here_for_sessions');
 
 // Error reporting based on environment
