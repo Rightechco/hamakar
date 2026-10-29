@@ -1,0 +1,423 @@
+/* ==========================================================================
+   Nuxt 3 & Modern SaaS Design System for Hamakar ERP
+   ========================================================================== */
+
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --primary-light: #eef2ff;
+    --primary-border: #c7d2fe;
+    --primary-glow: rgba(79, 70, 229, 0.15);
+
+    --secondary: #0f172a;
+    --secondary-light: #1e293b;
+    --accent: #06b6d4;
+    
+    --success: #10b981;
+    --success-light: #ecfdf5;
+    --success-border: #a7f3d0;
+    
+    --warning: #f59e0b;
+    --warning-light: #fffbeb;
+    --warning-border: #fde68a;
+    
+    --danger: #ef4444;
+    --danger-light: #fef2f2;
+    --danger-border: #fecaca;
+    
+    --info: #0284c7;
+    --info-light: #f0f9ff;
+    --info-border: #bae6fd;
+
+    --bg-body: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-subtle: #f1f5f9;
+
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+
+    --border-color: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --border-hover: #cbd5e1;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+    --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    --shadow-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
+    --shadow-focus: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+/* Global Font & Reset */
+body {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+    font-family: 'Vazirmatn', sans-serif !important;
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+}
+
+/* ==========================================================================
+   1. Nuxt 3 Cards & Surfaces
+   ========================================================================== */
+.card, .card-modern, .stat-card {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-card) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-hover) !important;
+    border-color: var(--border-hover) !important;
+}
+
+.card-header {
+    background: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    padding: 1.15rem 1.4rem !important;
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
+    color: var(--text-main) !important;
+}
+
+.card-body {
+    padding: 1.4rem !important;
+}
+
+.card-footer {
+    background: #fafbfc !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    padding: 1rem 1.4rem !important;
+}
+
+/* ==========================================================================
+   2. Nuxt 3 Tables & Data Grids
+   ========================================================================== */
+.table-responsive, .table-responsive-modern {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1.5rem;
+}
+
+.table {
+    margin-bottom: 0 !important;
+    width: 100%;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    vertical-align: middle;
+}
+
+.table thead, .table thead tr {
+    background: #f8fafc !important;
+}
+
+.table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    letter-spacing: -0.2px !important;
+    text-transform: uppercase !important;
+    padding: 1rem 1.15rem !important;
+    border-bottom: 1.5px solid var(--border-color) !important;
+    border-top: none !important;
+    white-space: nowrap !important;
+}
+
+.table tbody td {
+    padding: 1rem 1.15rem !important;
+    font-size: 0.885rem !important;
+    color: var(--text-main) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    background: var(--bg-surface);
+    transition: background-color 0.15s ease;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover td {
+    background-color: #f8fafc !important;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* Monospace styling for numbers and codes */
+.font-monospace {
+    font-family: 'Consolas', 'Monaco', monospace !important;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   3. Nuxt 3 Inputs & Form Controls
+   ========================================================================== */
+.form-control, .form-select, input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
+    background-color: #f8fafc !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.885rem !important;
+    font-family: inherit !important;
+    color: var(--text-main) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: none !important;
+}
+
+.form-control:focus, .form-select:focus, input:focus, select:focus, textarea:focus {
+    background-color: #ffffff !important;
+    border-color: var(--primary) !important;
+    box-shadow: var(--shadow-focus) !important;
+    outline: none !important;
+}
+
+.form-label, label {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    margin-bottom: 0.45rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+}
+
+.input-group-text {
+    background-color: #f1f5f9 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.85rem !important;
+}
+
+/* Filter Forms */
+#filter-form, .filter-box, form.p-3.bg-light {
+    background: #ffffff !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-subtle) !important;
+    padding: 1.25rem 1.4rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* ==========================================================================
+   4. Nuxt 3 Badges & Pills
+   ========================================================================== */
+.badge {
+    border-radius: var(--radius-full) !important;
+    font-weight: 700 !important;
+    font-size: 0.74rem !important;
+    padding: 0.35rem 0.8rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    letter-spacing: -0.2px !important;
+}
+
+.badge.bg-success, .badge.badge-success {
+    background: var(--success-light) !important;
+    color: #065f46 !important;
+    border: 1px solid var(--success-border) !important;
+}
+
+.badge.bg-warning, .badge.badge-warning {
+    background: var(--warning-light) !important;
+    color: #92400e !important;
+    border: 1px solid var(--warning-border) !important;
+}
+
+.badge.bg-danger, .badge.badge-danger {
+    background: var(--danger-light) !important;
+    color: #991b1b !important;
+    border: 1px solid var(--danger-border) !important;
+}
+
+.badge.bg-primary, .badge.badge-primary, .badge.bg-info, .badge.badge-info {
+    background: var(--primary-light) !important;
+    color: #3730a3 !important;
+    border: 1px solid var(--primary-border) !important;
+}
+
+.badge.bg-secondary, .badge.bg-light {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* ==========================================================================
+   5. Nuxt 3 Buttons
+   ========================================================================== */
+.btn {
+    border-radius: var(--radius-md) !important;
+    font-weight: 700 !important;
+    font-size: 0.84rem !important;
+    padding: 0.55rem 1.15rem !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.45rem !important;
+}
+
+.btn:active {
+    transform: scale(0.97) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px var(--primary-glow) !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.32) !important;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.22) !important;
+}
+
+.btn-success:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.32) !important;
+}
+
+.btn-outline-primary {
+    background: var(--primary-light) !important;
+    color: var(--primary) !important;
+    border: 1.5px solid var(--primary-border) !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: var(--primary) !important;
+}
+
+.btn-sm {
+    padding: 0.38rem 0.75rem !important;
+    font-size: 0.78rem !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+/* ==========================================================================
+   6. Nuxt KPI & Stat Cards
+   ========================================================================== */
+.nuxt-kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    box-shadow: var(--shadow-card);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nuxt-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-border);
+}
+
+.nuxt-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
+}
+
+.nuxt-kpi-value {
+    font-size: 1.65rem;
+    font-weight: 900;
+    color: var(--text-main);
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+}
+
+.nuxt-kpi-label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-top: 0.25rem;
+}
+
+/* ==========================================================================
+   7. Typography & Headings
+   ========================================================================== */
+h1, h2, h3, .h1, .h2, .h3, .text-gray-800 {
+    color: var(--text-main) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.3px !important;
+}
+
+/* ==========================================================================
+   8. Tabs & Nav Pills
+   ========================================================================== */
+.nav-pills .nav-link {
+    border-radius: var(--radius-md) !important;
+    font-weight: 700 !important;
+    font-size: 0.84rem !important;
+    color: var(--text-muted) !important;
+    padding: 0.55rem 1.1rem !important;
+    transition: all 0.2s !important;
+}
+
+.nav-pills .nav-link.active, .nav-pills .nav-link:hover {
+    background: var(--primary-light) !important;
+    color: var(--primary) !important;
+}
+
+.nav-pills .nav-link.active {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px var(--primary-glow) !important;
+}
+
+/* ==========================================================================
+   9. Mobile Native App & Touch Polish (Suha)
+   ========================================================================== */
+@media (max-width: 768px) {
+    main {
+        padding: 1rem 0.85rem 90px !important;
+    }
+
+    .card-body, .card-header {
+        padding: 1rem !important;
+    }
+
+    .table thead th, .table tbody td {
+        padding: 0.75rem 0.85rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 0.35rem;
+    }
+
+    .btn-group .btn, .d-flex .btn {
+        width: auto;
+    }
+}
