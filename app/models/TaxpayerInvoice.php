@@ -573,4 +573,102 @@ class TaxpayerInvoice {
         FROM moadian_invoices");
         return $this->db->fetch();
     }
+
+    /**
+     * تست زنده اتصال به سرور مودیان و بررسی اعتبار کلیدهای RSA
+     */
+    public function testConnectionAndKeys() {
+        $settings = $this->getSettings();
+        $results = [
+            'openssl_installed' => extension_loaded('openssl'),
+            'private_key_valid' => false,
+            'public_key_valid' => false,
+            'keypair_match' => false,
+            'signature_generated' => false,
+            'api_endpoint' => $settings->api_endpoint,
+            'server_reachable' => false,
+            'http_code' => 0,
+            'latency_ms' => 0,
+            'server_response' => '',
+            'mode' => !empty($settings->is_sandbox) ? 'آزمایشی (Sandbox)' : 'عملیاتی زنده (Production)'
+        ];
+
+        // ۱. بررسی کلید خصوصی و عمومی RSA
+        if (!empty($settings->private_key)) {
+            $privRes = @openssl_pkey_get_private($settings->private_key);
+            if ($privRes !== false) {
+                $results['private_key_valid'] = true;
+                $testData = "HAMAKAR_ERP_VERIFY_" . time();
+                $signature = '';
+                if (@openssl_sign($testData, $signature, $privRes, OPENSSL_ALGO_SHA256)) {
+                    $results['signature_generated'] = true;
+                    if (!empty($settings->public_key)) {
+                        $pubRes = @openssl_pkey_get_public($settings->public_key);
+                        if ($pubRes !== false) {
+                            $results['public_key_valid'] = true;
+                            $verify = @openssl_verify($testData, $signature, $pubRes, OPENSSL_ALGO_SHA256);
+                            $results['keypair_match'] = ($verify === 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        // ۲. تست ارتباط شبکه و پینگ به اندپوینت سامانه مودیان
+        $url = rtrim($settings->api_endpoint, '/') . '/ping';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $start = microtime(true);
+        $resp = curl_exec($ch);
+        $latency = round((microtime(true) - $start) * 1000);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        $results['latency_ms'] = $latency;
+        $results['http_code'] = $httpCode;
+        if ($httpCode > 0) {
+            $results['server_reachable'] = true;
+            $results['server_response'] = $resp ? substr($resp, 0, 300) : "HTTP $httpCode OK";
+        } else {
+            $results['server_reachable'] = false;
+            $results['server_response'] = $curlErr ?: 'درخواست به سرور مودیان تایم‌اوت شد یا پاسخ دریافت نشد.';
+        }
+
+        return $results;
+    }
+
+    /**
+     * تولید خودکار جفت کلید RSA استاندارد ۲۰۴۸ بیتی برای کارپوشه سامانه مودیان
+     */
+    public function generateStandardRsaKeys() {
+        if (!extension_loaded('openssl')) {
+            return ['success' => false, 'message' => 'اکستنشن OpenSSL روی سرور فعال نیست.'];
+        }
+        $config = [
+            "digest_alg" => "sha256",
+            "private_key_bits" => 2048,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA,
+        ];
+        $res = @openssl_pkey_new($config);
+        if (!$res) {
+            return ['success' => false, 'message' => 'خطا در تولید کلید RSA با OpenSSL.'];
+        }
+        $privateKey = '';
+        openssl_pkey_export($res, $privateKey);
+        $pubKeyDetails = openssl_pkey_get_details($res);
+        $publicKey = $pubKeyDetails["key"] ?? '';
+
+        return [
+            'success' => true,
+            'private_key' => $privateKey,
+            'public_key' => $publicKey,
+            'message' => 'جفت‌کلید اختصاصی RSA با موفقیت تولید گردید.'
+        ];
+    }
+
 }

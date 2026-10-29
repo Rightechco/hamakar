@@ -1,5 +1,5 @@
 <?php
-// app/views/admin/moadian/index.php - کارپوشه جامع و فوق پرمیوم سامانه مودیان مالیاتی کشور
+// app/views/admin/moadian/index.php - کارپوشه جامع، فوق پرمیوم و عملیاتی سامانه مودیان مالیاتی کشور
 $invoices = $invoices ?? [];
 $stats = $stats ?? null;
 $settings = $settings ?? null;
@@ -49,6 +49,18 @@ $currentSubject = $currentSubject ?? '';
     background: #f8fafc;
     color: #1e293b;
 }
+.api-console-box {
+    background: #0f172a;
+    color: #38bdf8;
+    border-radius: 14px;
+    padding: 14px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.82rem;
+    direction: ltr;
+    text-align: left;
+    max-height: 280px;
+    overflow-y: auto;
+}
 @media (max-width: 768px) {
     .page-header-actions {
         width: 100% !important;
@@ -86,10 +98,10 @@ $currentSubject = $currentSubject ?? '';
         <div>
             <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">
-                    <i class="fas fa-signal me-1"></i> متصل به سرور مودیان (<?php echo ($settings && $settings->is_sandbox) ? 'Sandbox آزمایشی' : 'تولید زنده Live'; ?>)
+                    <i class="fas fa-signal me-1"></i> اتصال مودیان: <?php echo (!empty($settings->is_sandbox)) ? 'Sandbox آزمایشی' : 'تولید زنده Live'; ?>
                 </span>
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">
-                    حافظه مالیاتی: <?php echo htmlspecialchars($settings->memory_id ?? 'A100HK'); ?>
+                    شناسه حافظه: <?php echo htmlspecialchars($settings->memory_id ?? 'A100HK'); ?>
                 </span>
             </div>
             <h3 class="fw-bold mb-1" style="color:#0f172a;">
@@ -101,12 +113,12 @@ $currentSubject = $currentSubject ?? '';
             <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices_create" class="btn btn-primary rounded-3 px-3 shadow-sm">
                 <i class="fas fa-plus me-1"></i> صدور فاکتور رسمی جدید
             </a>
-            <a href="#settings-pane" data-bs-toggle="pill" class="btn btn-outline-secondary rounded-3 px-3">
+            <button type="button" onclick="switchMoadianTab('settings-pane')" class="btn btn-outline-secondary rounded-3 px-3">
                 <i class="fas fa-cog me-1"></i> تنظیمات کلیدها
-            </a>
-            <a href="#api-pane" data-bs-toggle="pill" class="btn btn-outline-primary rounded-3 px-3">
+            </button>
+            <button type="button" onclick="switchMoadianTab('api-pane')" class="btn btn-outline-primary rounded-3 px-3">
                 <i class="fas fa-code me-1"></i> وب‌سرویس API حسابداری
-            </a>
+            </button>
         </div>
     </div>
 
@@ -155,7 +167,7 @@ $currentSubject = $currentSubject ?? '';
                         <h4 class="fw-bold mb-0 text-warning">
                             <?php echo number_format($stats->pending_count ?? count(array_filter($invoices, function($i){ return $i->status === 'pending'; }))); ?>
                         </h4>
-                        <small class="text-muted">نیازمند ارسال آنلاین</small>
+                        <small class="text-muted">آماده ارسال آنی</small>
                     </div>
                 </div>
             </div>
@@ -164,7 +176,7 @@ $currentSubject = $currentSubject ?? '';
             <div class="moadian-card p-3">
                 <div class="d-flex align-items-center gap-3">
                     <div class="rounded-3 p-3 bg-info bg-opacity-10 text-info">
-                        <i class="fas fa-coins fa-lg"></i>
+                        <i class="fas fa-percentage fa-lg"></i>
                     </div>
                     <div>
                         <small class="text-muted d-block fw-bold">ارزش افزوده ۱۰٪</small>
@@ -182,19 +194,19 @@ $currentSubject = $currentSubject ?? '';
     </div>
 
     <!-- Navigation Tabs -->
-    <ul class="nav nav-pills nav-pills-moadian mb-4 gap-2 bg-white p-2 rounded-4 border shadow-sm">
+    <ul class="nav nav-pills nav-pills-moadian mb-4 gap-2 bg-white p-2 rounded-4 border shadow-sm" id="moadianTabs" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#invoices-pane">
+            <button class="nav-link active" id="tab-invoices-btn" data-bs-toggle="pill" data-bs-target="#invoices-pane" type="button" role="tab">
                 <i class="fas fa-list-alt me-1"></i> صورتحساب‌های الکترونیکی کارپوشه
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#settings-pane" id="settings-tab-btn">
+            <button class="nav-link" id="tab-settings-btn" data-bs-toggle="pill" data-bs-target="#settings-pane" type="button" role="tab">
                 <i class="fas fa-sliders-h me-1"></i> پیکربندی و کلیدهای سامانه مودیان
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#api-pane">
+            <button class="nav-link" id="tab-api-btn" data-bs-toggle="pill" data-bs-target="#api-pane" type="button" role="tab">
                 <i class="fas fa-network-wired me-1"></i> اتصال به نرم‌افزار حسابداری (API)
             </button>
         </li>
@@ -203,7 +215,7 @@ $currentSubject = $currentSubject ?? '';
     <!-- Tab Contents -->
     <div class="tab-content">
         <!-- 1. INVOICES TAB -->
-        <div class="tab-pane fade show active" id="invoices-pane">
+        <div class="tab-pane fade show active" id="invoices-pane" role="tabpanel">
             <!-- Filter Bar -->
             <div class="moadian-card p-3 mb-4">
                 <form method="GET" action="<?php echo APP_URL; ?>/index.php" class="row g-2 align-items-center">
@@ -367,10 +379,61 @@ $currentSubject = $currentSubject ?? '';
             </div>
         </div>
 
-        <!-- 2. SETTINGS TAB -->
-        <div class="tab-pane fade" id="settings-pane">
+        <!-- 2. SETTINGS TAB (کلیدها و تست اتصال واقعی به سامانه مودیان) -->
+        <div class="tab-pane fade" id="settings-pane" role="tabpanel">
             <div class="row g-4">
                 <div class="col-lg-8">
+                    <!-- کارت تست و عیب‌یابی زنده اتصال به سرور مودیان -->
+                    <div class="moadian-card p-4 mb-4 border-primary border-opacity-25" style="background:#f8fafc;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">
+                                    <i class="fas fa-stethoscope text-primary me-2"></i>تست و عیب‌یابی زنده اتصال به سامانه مودیان و اعتبارسنجی کلیدها
+                                </h6>
+                                <span class="small text-muted">بررسی ارتباط سرور هماکار با سامانه امور مالیاتی کشور و صحه‌گذاری امضای OpenSSL</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3" onclick="generateAutoRsaKeys()" title="تولید خودکار جفت کلید RSA ۲۰۴۸ بیتی">
+                                    <i class="fas fa-magic me-1"></i> تولید خودکار کلید RSA
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary rounded-3 shadow-sm" id="btn-test-connection" onclick="runMoadianDiagnostic()">
+                                    <i class="fas fa-network-wired me-1"></i> تست اتصال زنده
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- نتیجه تست تشخیصی -->
+                        <div id="diagnostic-result" class="p-3 rounded-3 bg-white border" style="display:none; font-size:0.84rem;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                                <span class="fw-bold text-dark"><i class="fas fa-server text-success me-1"></i>نتیجه تست ارتباط زنده با مودیان:</span>
+                                <span id="diag-status-badge" class="badge bg-success">متصل</span>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <span class="text-muted">اکستنشن OpenSSL:</span>
+                                    <strong id="diag-openssl" class="font-monospace text-dark ms-1">فعال</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted">کلید خصوصی RSA:</span>
+                                    <strong id="diag-privkey" class="font-monospace text-dark ms-1">معتبر</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted">کلید عمومی و تطابق زوج‌کلید:</span>
+                                    <strong id="diag-pubkey" class="font-monospace text-dark ms-1">تایید شده</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted">پاسخ سرور دارایی (Latency):</span>
+                                    <strong id="diag-latency" class="font-monospace text-dark ms-1">120 ms</strong>
+                                </div>
+                                <div class="col-12 mt-1">
+                                    <span class="text-muted">پاسخ دریافتی از Endpoint:</span>
+                                    <div id="diag-response-text" class="font-monospace small bg-light p-2 rounded mt-1 border text-secondary" style="direction:ltr; text-align:left;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- فرم اصلی تنظیمات -->
                     <div class="moadian-card p-4">
                         <h5 class="fw-bold mb-3 text-dark">
                             <i class="fas fa-key text-primary me-2"></i>پیکربندی کلیدها و شناسه حافظه مالیاتی
@@ -379,13 +442,13 @@ $currentSubject = $currentSubject ?? '';
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small fw-bold">شناسه یکتای حافظه مالیاتی (Client ID / Memory ID):</label>
-                                    <input type="text" name="memory_id" class="form-control form-control-sm font-monospace" value="<?php echo htmlspecialchars($settings->memory_id ?? 'A100HK'); ?>" required>
-                                    <small class="text-muted" style="font-size:0.75rem;">کد ۶ کاراکتری دریافت شده از کارپوشه سازمان امور مالیاتی</small>
+                                    <input type="text" id="setting_memory_id" name="memory_id" class="form-control form-control-sm font-monospace" value="<?php echo htmlspecialchars($settings->memory_id ?? 'A100HK'); ?>" required>
+                                    <small class="text-muted" style="font-size:0.75rem;">کد ۶ کاراکتری اختصاصی صادر شده از کارپوشه امور مالیاتی</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small fw-bold">نرخ پیش‌فرض مالیات بر ارزش افزوده (درصد):</label>
                                     <input type="number" step="0.1" name="tax_rate" class="form-control form-control-sm" value="<?php echo htmlspecialchars($settings->tax_rate ?? '10.00'); ?>" required>
-                                    <small class="text-muted" style="font-size:0.75rem;">مطابق قانون بودجه کشور (۱۰ درصد)</small>
+                                    <small class="text-muted" style="font-size:0.75rem;">مطابق قانون مالیات بر ارزش افزوده کشور (۱۰ درصد)</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small fw-bold">کد اقتصادی مودی / شرکت:</label>
@@ -401,25 +464,26 @@ $currentSubject = $currentSubject ?? '';
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label text-muted small fw-bold">آدرس وب‌سرویس سامانه مودیان (API Endpoint):</label>
-                                    <input type="text" name="api_endpoint" class="form-control form-control-sm font-monospace" value="<?php echo htmlspecialchars($settings->api_endpoint ?? 'https://tp.tax.gov.ir/req/api'); ?>" required>
+                                    <input type="text" id="setting_api_endpoint" name="api_endpoint" class="form-control form-control-sm font-monospace" value="<?php echo htmlspecialchars($settings->api_endpoint ?? 'https://tp.tax.gov.ir/req/api'); ?>" required>
+                                    <small class="text-muted" style="font-size:0.75rem;">برای سرور اصلی امور مالیاتی: <code>https://tp.tax.gov.ir/req/api</code></small>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label text-muted small fw-bold">کلید خصوصی RSA (Private Key - PEM Format):</label>
-                                    <textarea name="private_key" rows="4" class="form-control form-control-sm font-monospace" placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"><?php echo htmlspecialchars($settings->private_key ?? ''); ?></textarea>
-                                    <small class="text-muted" style="font-size:0.75rem;">جهت امضای دیجیتال بسته‌های اطلاعاتی صورتحساب‌های الکترونیکی</small>
+                                    <textarea id="setting_private_key" name="private_key" rows="4" class="form-control form-control-sm font-monospace" placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"><?php echo htmlspecialchars($settings->private_key ?? ''); ?></textarea>
+                                    <small class="text-muted" style="font-size:0.75rem;">جهت امضای دیجیتال SHA256 بسته‌های ارسالی به کارپوشه</small>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label text-muted small fw-bold">کلید عمومی یا امضای گواهی CSR (Public Key):</label>
-                                    <textarea name="public_key" rows="3" class="form-control form-control-sm font-monospace" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"><?php echo htmlspecialchars($settings->public_key ?? ''); ?></textarea>
+                                    <textarea id="setting_public_key" name="public_key" rows="3" class="form-control form-control-sm font-monospace" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"><?php echo htmlspecialchars($settings->public_key ?? ''); ?></textarea>
                                 </div>
                                 <div class="col-12">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="is_sandbox" id="is_sandbox" value="1" <?php echo ($settings && $settings->is_sandbox) ? 'checked' : ''; ?>>
+                                        <input class="form-check-input" type="checkbox" name="is_sandbox" id="is_sandbox" value="1" <?php echo (!empty($settings->is_sandbox)) ? 'checked' : ''; ?>>
                                         <label class="form-check-label fw-bold" for="is_sandbox">
-                                            حالت آزمایشی سرور مودیان (Sandbox / شبیه‌ساز)
+                                            حالت شبیه‌ساز آزمایشی (Sandbox)
                                         </label>
                                     </div>
-                                    <small class="text-muted d-block mt-1">در این حالت، پکت‌های مالیاتی با کد پیگیری معتبر شبیه‌سازی می‌شوند و آسیبی به پرونده مالیاتی زنده نمی‌زنند.</small>
+                                    <small class="text-muted d-block mt-1">با غیرفعال کردن این گزینه، صورتحساب‌ها مستقیماً با امضای معتبر در درگاه رسمی سازمان امور مالیاتی کشور ثبت قطعی می‌گردند.</small>
                                 </div>
                                 <div class="col-12 mt-4 text-end">
                                     <button type="submit" class="btn btn-primary px-4 rounded-3 shadow-sm">
@@ -433,13 +497,14 @@ $currentSubject = $currentSubject ?? '';
                 <div class="col-lg-4">
                     <div class="moadian-card p-4 h-100 bg-light">
                         <h6 class="fw-bold mb-3 text-dark">
-                            <i class="fas fa-info-circle text-info me-2"></i>راهنمای اتصال به مودیان
+                            <i class="fas fa-info-circle text-info me-2"></i>راهنمای گام به گام اتصال واقعی
                         </h6>
                         <ol class="small text-muted ps-3 lh-lg mb-3">
-                            <li>در درگاه ملی خدمات مالیاتی (my.tax.gov.ir) وارد کارپوشه اختصاصی خود شوید.</li>
-                            <li>در بخش «عضویت و پایانه فروشگاهی»، یک پرونده ثبت کرده و کلید عمومی (Public Key) را بارگذاری نمایید.</li>
-                            <li>شناسه یکتای حافظه مالیاتی (کد ۶ حرفی) را دریافت کرده و در فیلد روبرو ثبت کنید.</li>
-                            <li>پس از ذخیره تنظیمات، تمام فاکتورهای رسمی سامانه با امضای اختصاصی شما به صورت خودکار به مودیان ارسال می‌گردند.</li>
+                            <li>در درگاه ملی خدمات مالیاتی (<strong>my.tax.gov.ir</strong>) وارد کارپوشه اختصاصی شرکت یا مودی شوید.</li>
+                            <li>در بخش «عضویت و پایانه فروشگاهی»، روی گزینه ثبت پایانه جدید کلیک کنید.</li>
+                            <li>با کلیک روی دکمه «تولید خودکار کلید RSA»، زوج‌کلید اختصاصی را ایجاد کرده و کلید عمومی را در درگاه مالیاتی بارگذاری فرمایید.</li>
+                            <li>شناسه یکتای ۶ کاراکتری حافظه مالیاتی صادر شده توسط دارایی را در فیلد روبرو وارد کرده و ذخیره نمایید.</li>
+                            <li>دکمه «تست اتصال زنده» را کلیک فرمایید تا تاییدیه ارتباط و امضای دیجیتال صادر شود.</li>
                         </ol>
                         <div class="p-3 bg-white rounded-3 border">
                             <small class="fw-bold text-dark d-block mb-1">الگوریتم تولید شناسه یکتای ۲۲ رقمی:</small>
@@ -450,85 +515,51 @@ $currentSubject = $currentSubject ?? '';
             </div>
         </div>
 
-        <!-- 3. ACCOUNTING API TAB -->
-        <div class="tab-pane fade" id="api-pane">
+        <!-- 3. ACCOUNTING API TAB (کنسول تست زنده و راهنمای جامع اتصال نرم‌افزارهای حسابداری) -->
+        <div class="tab-pane fade" id="api-pane" role="tabpanel">
             <div class="row g-4">
                 <div class="col-lg-8">
-                    <div class="moadian-card p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0 text-dark">
-                                <i class="fas fa-plug text-primary me-2"></i>وب‌سرویس RESTful اتصال نرم‌افزارهای حسابداری
-                            </h5>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">
-                                نسخه ۳.۵.۰ فعال
-                            </span>
-                        </div>
-                        <p class="text-muted small">
-                            این وب‌سرویس به نرم‌افزارهای حسابداری سازمانی (سپیدار، هلو، شایگان، راهکاران و...) اجازه می‌دهد تا فاکتورهای رسمی را دریافت کرده یا مستقیماً فاکتورهای صادر شده خود را به هماکار تزریق نمایند تا شناسه ۲۲ رقمی مالیاتی صادر و به کارپوشه ارسال گردد.
-                        </p>
-
-                        <!-- API Key Box -->
-                        <div class="p-3 rounded-3 border bg-light mb-4">
-                            <label class="form-label text-muted small fw-bold d-block">کلید امنیتی اتصال نرم‌افزار حسابداری (X-API-KEY):</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control form-control-sm font-monospace bg-white" id="api_key_val" value="<?php echo htmlspecialchars($apiKey->api_key ?? 'hmk_live_acc_software_secret_key'); ?>" readonly>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('api_key_val').value); alert('کلید API کپی شد!');">
-                                    <i class="far fa-copy me-1"></i> کپی کلید
-                                </button>
+                    <!-- کنسول تست زنده وب‌سرویس -->
+                    <div class="moadian-card p-4 mb-4 border-primary border-opacity-25" style="background:#f8fafc;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">
+                                    <i class="fas fa-play-circle text-primary me-2"></i>کنسول تست تعاملی و زنده وب‌سرویس API حسابداری
+                                </h6>
+                                <span class="small text-muted">تست آنی فراخوانی اندپوینت‌ها، صدور فاکتور و مشاهده خروجی JSON زنده</span>
                             </div>
-                            <small class="text-muted" style="font-size:0.75rem;">در تمام درخواست‌ها، این کلید را در هدر <code>X-API-KEY: {key}</code> ارسال فرمایید.</small>
+                            <button type="button" class="btn btn-sm btn-primary rounded-3 shadow-sm px-3" id="btn-run-api-test" onclick="executeApiTest()">
+                                <i class="fas fa-paper-plane me-1"></i> اجرای درخواست تست (Send)
+                            </button>
                         </div>
 
-                        <!-- Endpoints List -->
-                        <h6 class="fw-bold text-dark mb-3">اندپوینت‌های فعال وب‌سرویس:</h6>
-                        <div class="list-group mb-4">
-                            <!-- Endpoint 1 -->
-                            <div class="list-group-item p-3">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <span class="badge bg-success">GET</span>
-                                    <code class="fw-bold">/index.php?page=api&action=official_invoices</code>
-                                </div>
-                                <small class="text-muted d-block">دریافت لیست فاکتورهای رسمی با امکان فیلتر بر اساس تاریخ و وضعیت سامانه مودیان.</small>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">اندپوینت انتخابی جهت تست:</label>
+                                <select id="api-test-endpoint" class="form-select form-select-sm" onchange="onEndpointChange()">
+                                    <option value="ping">GET /ping (تست ارتباط وب‌سرویس)</option>
+                                    <option value="official_invoices">GET /official_invoices (لیست فاکتورهای رسمی)</option>
+                                    <option value="moadian_summary">GET /moadian_summary (خلاصه آمار کارپوشه)</option>
+                                    <option value="create_official_invoice">POST /create_official_invoice (صدور فاکتور رسمی از سپیدار / هلو)</option>
+                                    <option value="sync_moadian">POST /sync_moadian (استعلام و سینک کارپوشه)</option>
+                                </select>
                             </div>
-
-                            <!-- Endpoint 2 -->
-                            <div class="list-group-item p-3">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <span class="badge bg-primary">POST</span>
-                                    <code class="fw-bold">/index.php?page=api&action=create_official_invoice</code>
-                                </div>
-                                <small class="text-muted d-block">ثبت فاکتور رسمی از نرم‌افزار حسابداری در هماکار، تولید خودکار شناسه یکتای مالیاتی (TaxID) و ارسال آنی به کارپوشه دارایی.</small>
-                            </div>
-
-                            <!-- Endpoint 3 -->
-                            <div class="list-group-item p-3">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <span class="badge bg-info">GET</span>
-                                    <code class="fw-bold">/index.php?page=api&action=invoice_details&id={id}</code>
-                                </div>
-                                <small class="text-muted d-block">دریافت جزئیات کامل یک فاکتور رسمی، اقلام، نرخ‌های مالیات و کد پیگیری دارایی.</small>
-                            </div>
-
-                            <!-- Endpoint 4 -->
-                            <div class="list-group-item p-3">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <span class="badge bg-warning text-dark">POST</span>
-                                    <code class="fw-bold">/index.php?page=api&action=sync_moadian</code>
-                                </div>
-                                <small class="text-muted d-block">همگام‌سازی و استعلام وضعیت صورتحساب بین نرم‌افزار حسابداری و سامانه مودیان.</small>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold text-muted">آدرس کامل فراخوانی (Request URL):</label>
+                                <input type="text" id="api-request-url" class="form-control form-control-sm font-monospace bg-white" readonly value="<?php echo APP_URL; ?>/index.php?page=api&action=ping">
                             </div>
                         </div>
 
-                        <!-- Sample JSON Payload -->
-                        <h6 class="fw-bold text-dark mb-2">نمونه بدنه ارسالی (JSON Payload) برای ثبت فاکتور رسمی:</h6>
-                        <pre class="bg-dark text-light p-3 rounded-3 font-monospace" style="direction:ltr; text-align:left; font-size:0.8rem; max-height:260px; overflow-y:auto;">
-{
-  "invoice_number": "ACC-1403-9001",
-  "customer_name": "شرکت مهندسی داده‌پردازان",
+                        <!-- بدنه درخواستی برای متدهای POST -->
+                        <div id="api-payload-group" class="mb-3" style="display:none;">
+                            <label class="form-label small fw-bold text-muted">بدنه ارسالی (JSON Payload):</label>
+                            <textarea id="api-request-payload" rows="6" class="form-control form-control-sm font-monospace bg-white" style="direction:ltr; text-align:left;">{
+  "invoice_number": "ACC-TEST-<?php echo rand(1000, 9999); ?>",
+  "customer_name": "شرکت مهندسی داده‌پردازان تبریز",
   "customer_economic_code": "411122334455",
   "customer_national_id": "10109988776",
-  "customer_phone": "02188990011",
-  "issue_date": "1403/08/10",
+  "customer_phone": "04134401179",
+  "issue_date": "<?php echo date('Y/m/d'); ?>",
   "pattern_type": 1,
   "vat_rate": 10,
   "auto_send_moadian": true,
@@ -537,40 +568,141 @@ $currentSubject = $currentSubject ?? '';
       "product_name": "سامانه مدیریت ابری هماکار",
       "goods_code": "2710000138241",
       "quantity": 1,
-      "unit_price": 75000000
+      "unit_price": 50000000
     }
   ]
-}
-                        </pre>
+}</textarea>
+                        </div>
+
+                        <!-- خروجی زنده پاسخ سرور -->
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-bold text-muted">پاسخ زنده وب‌سرویس (Response JSON):</span>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span id="api-response-status" class="badge bg-secondary" style="font-size:0.75rem;">آماده تست</span>
+                                    <span id="api-response-time" class="small text-muted font-monospace">0 ms</span>
+                                </div>
+                            </div>
+                            <pre id="api-response-viewer" class="api-console-box mb-0">// روی دکمه «اجرای درخواست تست» کلیک فرمایید تا پاسخ زنده سرور نمایش داده شود.</pre>
+                        </div>
+                    </div>
+
+                    <!-- مستندات اندپوینت‌ها -->
+                    <div class="moadian-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-dark">
+                                <i class="fas fa-book text-primary me-2"></i>مستندات کامل اندپوینت‌های RESTful
+                            </h5>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">
+                                نسخه ۳.۵.۰ فعال
+                            </span>
+                        </div>
+                        <p class="text-muted small">
+                            این وب‌سرویس به نرم‌افزارهای حسابداری سازمانی (سپیدار همکاران سیستم، هلو، شایگان، راهکاران و...) اجازه می‌دهد تا فاکتورهای رسمی خود را تزریق کرده، شناسه ۲۲ رقمی مالیاتی (TaxID) دریافت نمایند و بدون واسطه به سامانه مودیان ارسال کنند.
+                        </p>
+
+                        <!-- API Key Box -->
+                        <div class="p-3 rounded-3 border bg-light mb-4">
+                            <label class="form-label text-muted small fw-bold d-block">کلید امنیتی اتصال نرم‌افزار حسابداری (X-API-KEY):</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-sm font-monospace bg-white" id="api_key_val" value="<?php echo htmlspecialchars($apiKey->api_key ?? 'hmk_ca6806f53a4007f7d910e4f519a48af2'); ?>" readonly>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('api_key_val').value); alert('کلید امنیتی وب‌سرویس در کلیپ‌بورد کپی شد.');">
+                                    <i class="far fa-copy me-1"></i> کپی کلید
+                                </button>
+                            </div>
+                            <small class="text-muted" style="font-size:0.75rem;">در تمام درخواست‌ها، هدر <code>X-API-KEY: {key}</code> را ارسال نمایید.</small>
+                        </div>
+
+                        <!-- Endpoints List -->
+                        <div class="list-group mb-4">
+                            <div class="list-group-item p-3">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-secondary">GET</span>
+                                    <code class="fw-bold">/index.php?page=api&action=ping</code>
+                                </div>
+                                <small class="text-muted d-block">بررسی سلامت سرور، زمان جلالی و وضعیت اتصال به سامانه مودیان.</small>
+                            </div>
+                            <div class="list-group-item p-3">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-success">GET</span>
+                                    <code class="fw-bold">/index.php?page=api&action=official_invoices</code>
+                                </div>
+                                <small class="text-muted d-block">دریافت لیست فاکتورهای رسمی با فیلتر تاریخ، شماره فاکتور و وضعیت سامانه مودیان.</small>
+                            </div>
+                            <div class="list-group-item p-3">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-primary">POST</span>
+                                    <code class="fw-bold">/index.php?page=api&action=create_official_invoice</code>
+                                </div>
+                                <small class="text-muted d-block">ثبت فاکتور رسمی از نرم‌افزار حسابداری در هماکار، صدور خودکار شناسه یکتای مالیاتی (TaxID) و ارسال آنی به کارپوشه دارایی.</small>
+                            </div>
+                            <div class="list-group-item p-3">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-info">GET</span>
+                                    <code class="fw-bold">/index.php?page=api&action=invoice_details&id={id}</code>
+                                </div>
+                                <small class="text-muted d-block">دریافت جزئیات کامل فاکتور رسمی، اقلام، نرخ‌های مالیات و کد پیگیری UID دارایی.</small>
+                            </div>
+                            <div class="list-group-item p-3">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-warning text-dark">POST</span>
+                                    <code class="fw-bold">/index.php?page=api&action=sync_moadian</code>
+                                </div>
+                                <small class="text-muted d-block">همگام‌سازی و استعلام وضعیت صورتحساب بین نرم‌افزار حسابداری و سامانه مودیان.</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- نمونه کدهای اتصال نرم‌افزارها -->
                 <div class="col-lg-4">
                     <div class="moadian-card p-4 h-100">
                         <h6 class="fw-bold mb-3 text-dark">
-                            <i class="fas fa-terminal text-success me-2"></i>نمونه کدهای اتصال سریع
+                            <i class="fas fa-laptop-code text-success me-2"></i>راهنمای اتصال نرم‌افزارهای مالی
                         </h6>
+
+                        <!-- سپیدار همکاران سیستم -->
+                        <div class="alert alert-light border rounded-3 p-3 mb-3">
+                            <h6 class="fw-bold text-primary mb-1" style="font-size:0.85rem;">
+                                <i class="fas fa-cube me-1"></i>اتصال سپیدار همکاران سیستم:
+                            </h6>
+                            <p class="small text-muted mb-2" style="font-size:0.75rem;">
+                                از طریق ماژول وب‌سرویس یا افزونه اختصاصی سپیدار، آدرس <code>create_official_invoice</code> را به عنوان وب‌هوک خروج فاکتور فروش تنظیم فرمایید. هماکار بلافاصله فاکتور را دریافت، تبدیل و به مودیان ارسال می‌کند.
+                            </p>
+                        </div>
+
+                        <!-- هلو -->
+                        <div class="alert alert-light border rounded-3 p-3 mb-3">
+                            <h6 class="fw-bold text-info mb-1" style="font-size:0.85rem;">
+                                <i class="fas fa-boxes me-1"></i>اتصال نرم‌افزار حسابداری هلو:
+                            </h6>
+                            <p class="small text-muted mb-2" style="font-size:0.75rem;">
+                                با فراخوانی متد POST و هدر امنیتی X-API-KEY در وب‌سرویس هلو، شناسه مالیاتی صادر شده در فیلد اختصاصی صورتحساب هلو ذخیره می‌گردد.
+                            </p>
+                        </div>
+
+                        <!-- نمونه کد cURL -->
                         <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold">تست با cURL:</label>
+                            <label class="form-label text-muted small fw-bold">نمونه دستور cURL:</label>
                             <pre class="bg-light p-2 rounded-3 font-monospace text-dark" style="direction:ltr; text-align:left; font-size:0.75rem;">
-curl -X GET "<?php echo APP_URL; ?>/index.php?page=api&action=official_invoices" \
-  -H "X-API-KEY: <?php echo htmlspecialchars($apiKey->api_key ?? 'hmk_live_acc_software_secret_key'); ?>"
+curl -X GET "<?php echo APP_URL; ?>/index.php?page=api&action=ping" \
+  -H "X-API-KEY: <?php echo htmlspecialchars($apiKey->api_key ?? 'hmk_ca6806f53a4007f7d910e4f519a48af2'); ?>"
                             </pre>
                         </div>
+
+                        <!-- نمونه کد C# (.NET) -->
                         <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold">تست در PHP (cURL):</label>
-                            <pre class="bg-light p-2 rounded-3 font-monospace text-dark" style="direction:ltr; text-align:left; font-size:0.72rem;">
-$ch = curl_init("<?php echo APP_URL; ?>/index.php?page=api&action=official_invoices");
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "X-API-KEY: <?php echo htmlspecialchars($apiKey->api_key ?? 'hmk_key'); ?>",
-    "Content-Type: application/json"
-]);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
+                            <label class="form-label text-muted small fw-bold">نمونه کد C# (.NET / سپیدار):</label>
+                            <pre class="bg-light p-2 rounded-3 font-monospace text-dark" style="direction:ltr; text-align:left; font-size:0.7rem; max-height:160px; overflow-y:auto;">
+using var client = new HttpClient();
+client.DefaultRequestHeaders.Add("X-API-KEY", "<?php echo htmlspecialchars($apiKey->api_key ?? 'hmk_key'); ?>");
+var response = await client.GetAsync("<?php echo APP_URL; ?>/index.php?page=api&action=official_invoices");
+string json = await response.Content.ReadAsStringAsync();
                             </pre>
                         </div>
+
                         <div class="alert alert-success rounded-3 p-2 small mb-0">
-                            <i class="fas fa-check-circle me-1"></i> سازگار با تمام نسخه‌های نرم‌افزارهای سپیدار همکاران سیستم و هلو
+                            <i class="fas fa-shield-alt me-1"></i> ارتباط امن SSL و اعتبارسنجی خودکار ساختار مالیاتی
                         </div>
                     </div>
                 </div>
@@ -610,6 +742,16 @@ $response = curl_exec($ch);
 </div>
 
 <script>
+function switchMoadianTab(paneId) {
+    var btn = document.querySelector('button[data-bs-target="#' + paneId + '"]');
+    if (btn) {
+        var tab = new bootstrap.Tab(btn);
+        tab.show();
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        window.location.hash = '#' + paneId;
+    }
+}
+
 function cancelMoadianInvoice(id, taxid) {
     document.getElementById('modal_taxid').innerText = taxid;
     document.getElementById('cancelForm').action = '<?php echo APP_URL; ?>/index.php?page=admin&action=cancel_moadian&id=' + id;
@@ -617,12 +759,147 @@ function cancelMoadianInvoice(id, taxid) {
     modal.show();
 }
 
-// اگر هش در آدرس وجود داشت تب مربوطه باز شود
-if (window.location.hash === '#settings-tab') {
-    var tabBtn = document.getElementById('settings-tab-btn');
-    if (tabBtn) {
-        var tab = new bootstrap.Tab(tabBtn);
-        tab.show();
+// تغییر اندپوینت انتخابی در کنسول تست زنده API
+function onEndpointChange() {
+    var endpoint = document.getElementById('api-test-endpoint').value;
+    var baseUrl = '<?php echo APP_URL; ?>/index.php?page=api&action=' + endpoint;
+    document.getElementById('api-request-url').value = baseUrl;
+    
+    var payloadGroup = document.getElementById('api-payload-group');
+    if (endpoint === 'create_official_invoice' || endpoint === 'sync_moadian') {
+        payloadGroup.style.display = 'block';
+    } else {
+        payloadGroup.style.display = 'none';
     }
 }
+
+// اجرای تست زنده وب‌سرویس API حسابداری
+async function executeApiTest() {
+    var endpoint = document.getElementById('api-test-endpoint').value;
+    var url = document.getElementById('api-request-url').value;
+    var apiKey = document.getElementById('api_key_val').value;
+    var viewer = document.getElementById('api-response-viewer');
+    var statusBadge = document.getElementById('api-response-status');
+    var timeBadge = document.getElementById('api-response-time');
+    var btn = document.getElementById('btn-run-api-test');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> در حال ارسال...';
+    viewer.innerText = '// در حال ارسال درخواست به وب‌سرویس هماکار...';
+
+    var startTime = performance.now();
+    try {
+        var options = {
+            method: (endpoint === 'create_official_invoice' || endpoint === 'sync_moadian') ? 'POST' : 'GET',
+            headers: {
+                'X-API-KEY': apiKey,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        if (options.method === 'POST') {
+            options.body = document.getElementById('api-request-payload').value;
+        }
+
+        var response = await fetch(url, options);
+        var endTime = performance.now();
+        var duration = Math.round(endTime - startTime);
+        timeBadge.innerText = duration + ' ms';
+
+        statusBadge.innerText = response.status + ' ' + response.statusText;
+        if (response.ok) {
+            statusBadge.className = 'badge bg-success';
+        } else {
+            statusBadge.className = 'badge bg-danger';
+        }
+
+        var text = await response.text();
+        try {
+            var json = JSON.parse(text);
+            viewer.innerText = JSON.stringify(json, null, 2);
+        } catch(e) {
+            viewer.innerText = text;
+        }
+    } catch(err) {
+        statusBadge.innerText = 'Network Error';
+        statusBadge.className = 'badge bg-danger';
+        viewer.innerText = '// خطا در برقراری ارتباط با وب‌سرویس: ' + err.message;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> اجرای درخواست تست (Send)';
+    }
+}
+
+// تست و عیب‌یابی زنده اتصال به سرور مودیان
+async function runMoadianDiagnostic() {
+    var btn = document.getElementById('btn-test-connection');
+    var resultBox = document.getElementById('diagnostic-result');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> بررسی زنده...';
+
+    try {
+        var res = await fetch('<?php echo APP_URL; ?>/index.php?page=admin&action=test_moadian_connection');
+        var data = await res.json();
+        
+        resultBox.style.display = 'block';
+        if (data.status === 'success' && data.data) {
+            var d = data.data;
+            document.getElementById('diag-openssl').innerText = d.openssl_installed ? 'فعال و عملیاتی' : 'غیرفعال';
+            document.getElementById('diag-openssl').className = d.openssl_installed ? 'text-success fw-bold' : 'text-danger fw-bold';
+
+            document.getElementById('diag-privkey').innerText = d.private_key_valid ? 'معتبر (امضای SHA256 تایید شد)' : 'نامعتبر یا خالی';
+            document.getElementById('diag-privkey').className = d.private_key_valid ? 'text-success fw-bold' : 'text-danger fw-bold';
+
+            document.getElementById('diag-pubkey').innerText = d.keypair_match ? 'تطابق کامل زوج‌کلید' : (d.public_key_valid ? 'کلید عمومی معتبر' : 'ثبت نشده');
+            document.getElementById('diag-pubkey').className = d.keypair_match ? 'text-success fw-bold' : 'text-warning fw-bold';
+
+            document.getElementById('diag-latency').innerText = d.latency_ms + ' ms';
+            document.getElementById('diag-response-text').innerText = d.server_response;
+
+            var statusBadge = document.getElementById('diag-status-badge');
+            if (d.server_reachable) {
+                statusBadge.className = 'badge bg-success';
+                statusBadge.innerText = 'سرور مودیان در دسترس (HTTP ' + d.http_code + ')';
+            } else {
+                statusBadge.className = 'badge bg-info text-dark';
+                statusBadge.innerText = 'حالت شبیه‌ساز امن (Sandbox فعال)';
+            }
+        }
+    } catch(err) {
+        alert('خطا در تست اتصال به سامانه مودیان: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-network-wired me-1"></i> تست اتصال زنده';
+    }
+}
+
+// تولید خودکار کلیدهای RSA
+async function generateAutoRsaKeys() {
+    if (!confirm('آیا مایل به تولید خودکار زوج‌کلید RSA استاندارد ۲۰۴۸ بیتی برای مودیان هستید؟')) {
+        return;
+    }
+    try {
+        var res = await fetch('<?php echo APP_URL; ?>/index.php?page=admin&action=generate_moadian_keys');
+        var data = await res.json();
+        if (data.status === 'success' && data.data && data.data.success) {
+            document.getElementById('setting_private_key').value = data.data.private_key;
+            document.getElementById('setting_public_key').value = data.data.public_key;
+            alert('زوج‌کلید RSA با موفقیت تولید شد. برای اعمال نهایی، روی «ذخیره تنظیمات مودیان» کلیک فرمایید.');
+        } else {
+            alert('خطا در تولید کلید: ' + (data.data.message || 'خطای سرور'));
+        }
+    } catch(e) {
+        alert('خطا در برقراری ارتباط با سرور.');
+    }
+}
+
+// باز کردن تب بر اساس هش URL
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash) {
+        var hash = window.location.hash.replace('#', '');
+        if (hash === 'settings-pane' || hash === 'api-pane' || hash === 'invoices-pane') {
+            switchMoadianTab(hash);
+        }
+    }
+});
 </script>

@@ -212,6 +212,8 @@ switch ($page) {
             case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
             case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'test_moadian_connection': $targetMethod = 'testMoadianConnection'; break;
+            case 'generate_moadian_keys': $targetMethod = 'generateMoadianKeys'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
             case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
@@ -559,6 +561,8 @@ switch ($page) {
             case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
             case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'test_moadian_connection': $targetMethod = 'testMoadianConnection'; break;
+            case 'generate_moadian_keys': $targetMethod = 'generateMoadianKeys'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
             case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
@@ -643,6 +647,8 @@ switch ($page) {
             case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
             case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
             case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'test_moadian_connection': $targetMethod = 'testMoadianConnection'; break;
+            case 'generate_moadian_keys': $targetMethod = 'generateMoadianKeys'; break;
             case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
             case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
@@ -742,10 +748,14 @@ switch ($page) {
     case 'ajax':
         $controller = new AjaxController();
         switch($action) {
-            case 'get_users': $targetMethod = 'getUsers'; break;
-            case 'send_message': $targetMethod = 'sendMessage'; break;
-            case 'fetch_messages': $targetMethod = 'fetchMessages'; break;
-            case 'number_to_words': $targetMethod = 'numberToWords'; break;
+            case 'get_users':
+            case 'getUsers': $targetMethod = 'getUsers'; break;
+            case 'send_message':
+            case 'sendMessage': $targetMethod = 'sendMessage'; break;
+            case 'fetch_messages':
+            case 'fetchMessages': $targetMethod = 'fetchMessages'; break;
+            case 'number_to_words':
+            case 'numberToWords': $targetMethod = 'numberToWords'; break;
         }
         break;
     

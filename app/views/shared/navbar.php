@@ -1,5 +1,5 @@
 <?php
-// app/views/shared/navbar.php - هدر مدرن و نیتیو سبک Nuxt 3 هماکار
+// app/views/shared/navbar.php - هدر مدرن، نیتیو و فوق تجاری هماکار ERP
 global $auth;
 $user = $auth->user();
 
@@ -12,10 +12,10 @@ $notifications = [
 ?>
 <style>
     .top-navbar {
-        background: rgba(255, 255, 255, 0.94) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
         backdrop-filter: blur(20px) saturate(180%) !important;
         -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-        padding: 0.65rem 1.4rem !important;
+        padding: 0.6rem 1.25rem !important;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -146,6 +146,42 @@ $notifications = [
         background: #fef2f2 !important;
         color: #ef4444 !important;
     }
+
+    /* هدر سینک و اپ دسکتاپ */
+    .header-sync-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .btn-header-install {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        color: #ffffff !important;
+        border: none;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-header-install:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+        color: #ffffff !important;
+    }
 </style>
 
 <nav class="top-navbar">
@@ -155,23 +191,35 @@ $notifications = [
             <i class="fa fa-bars-staggered"></i>
         </button>
 
-        <div class="d-none d-sm-flex align-items-center gap-2">
+        <div class="d-none d-md-flex align-items-center gap-2">
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1" style="font-size:0.78rem; font-weight:800;">
                 <i class="fas fa-layer-group me-1"></i>سامانه سازمانی هماکار
             </span>
         </div>
     </div>
 
-    <!-- Center: Quick Mobile Title -->
-    <div class="d-flex d-sm-none align-items-center">
-        <span class="fw-bold" style="font-size:0.95rem; color:#0f172a; letter-spacing:-0.3px;">
-            هماکار <span class="text-primary">ERP</span>
-        </span>
+    <!-- Center: Desktop Install & Offline Sync Status in Header (انتقال وضعیت سینک و نصب دسکتاپ به هدر) -->
+    <div class="d-flex align-items-center gap-2">
+        <!-- ابزارک وضعیت شبکه و سینک آفلاین -->
+        <div class="header-sync-pill" id="header-network-widget" title="وضعیت ارتباط با سرور و پایگاه داده">
+            <i id="network-status-icon" class="fas fa-circle text-success" style="font-size:0.6rem;"></i>
+            <span id="network-status-text" class="d-none d-sm-inline">آنلاین (سرور متصل)</span>
+            <span id="offline-sync-count" class="badge bg-danger rounded-pill" style="display:none; font-size:0.65rem;">0</span>
+            <button id="btn-manual-sync" type="button" class="btn btn-link p-0 text-primary" onclick="if(window.triggerOfflineSync) window.triggerOfflineSync();" title="همگام‌سازی داده‌های آفلاین" style="font-size:0.75rem; text-decoration:none;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+
+        <!-- دکمه نصب اپلیکیشن دسکتاپ ویندوز در هدر -->
+        <button id="btn-install-desktop-app" type="button" class="btn-header-install" onclick="window.showDesktopInstallModal()" title="نصب اپلیکیشن مستقل دسکتاپ ویندوز هماکار">
+            <i class="fab fa-windows"></i>
+            <span class="d-none d-sm-inline">نصب دسکتاپ</span>
+            <span class="d-inline d-sm-none">نصب</span>
+        </button>
     </div>
 
     <!-- Left side: Notifications & User Profile -->
     <div class="d-flex align-items-center gap-2">
-        
         <!-- Notifications Dropdown -->
         <div class="dropdown">
             <a class="nav-control-btn" href="#" id="alertsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="اعلان‌ها">
@@ -227,6 +275,79 @@ $notifications = [
                 </a>
             </div>
         </div>
-
     </div>
 </nav>
+
+<!-- مودال فوق پرمیوم نصب نرم‌افزار دسکتاپ ویندوز هماکار -->
+<div class="modal fade" id="hamakar-desktop-install-modal" tabindex="-1" aria-labelledby="desktopModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-gradient" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color:#fff;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-white bg-opacity-10 p-2.5 text-info">
+                        <i class="fab fa-windows fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0" id="desktopModalLabel">نصب نسخه دسکتاپ هماکار ERP</h5>
+                        <span class="small text-light text-opacity-75">نسخه رسمی ویندوز ۱۱ / ۱۰ با کارکرد آفلاین مستقل</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="p-3 rounded-3 mb-3" style="background:#f8fafc; border:1px solid #e2e8f0;">
+                    <div class="d-flex align-items-center gap-2 mb-2 text-dark fw-bold" style="font-size:0.88rem;">
+                        <i class="fas fa-check-circle text-success"></i> ویژگی‌های نسخه دسکتاپ هماکار:
+                    </div>
+                    <ul class="small text-muted mb-0 ps-3 lh-lg" style="font-size:0.8rem;">
+                        <li>کارکرد کاملاً مستقل در نوار وظیفه (Taskbar) و منوی استارت ویندوز</li>
+                        <li>پشتیبانی ۱۰۰٪ آفلاین با دیتابیس محلی IndexedDB و سینک خودکار</li>
+                        <li>سرعت بارگذاری فوق‌العاده بالا بدون نیاز به باز نگه داشتن مرورگر</li>
+                        <li>امکان صدور، چاپ فاکتور و ثبت عملیات در زمان قطع کامل اینترنت</li>
+                    </ul>
+                </div>
+
+                <!-- دکمه نصب مستقیم مرورگر -->
+                <div id="desktop-prompt-action" class="mb-3">
+                    <button type="button" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" onclick="window.executeNativeInstallPrompt()">
+                        <i class="fab fa-windows fa-lg"></i>
+                        <span>نصب مستقیم اپلیکیشن در ویندوز (۱ کلیک)</span>
+                    </button>
+                </div>
+
+                <!-- راهنمای نصب سریع برای اج و کروم -->
+                <div class="card border rounded-3 p-3 bg-light">
+                    <div class="fw-bold small text-dark mb-2">
+                        <i class="fas fa-info-circle text-primary me-1"></i> راهنمای نصب دستی در مرورگر مایکروسافت اج یا کروم:
+                    </div>
+                    <ol class="small text-muted ps-3 mb-0 lh-lg" style="font-size:0.78rem;">
+                        <li>در نوار آدرس بالای همین صفحه، روی آیکون <strong>نصب (Install <i class="fas fa-arrow-down"></i>)</strong> کلیک کنید.</li>
+                        <li>یا از منوی سه نقطه <i class="fas fa-ellipsis-v"></i> گزینه <strong>Apps</strong> و سپس <strong>Install Hamakar ERP</strong> را بزنید.</li>
+                        <li>تیک گزینه‌های <em>«Pin to taskbar»</em> و <em>«Create Desktop shortcut»</em> را فعال نمایید.</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-light rounded-3 px-4 border" data-bs-dismiss="modal">متوجه شدم</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.showDesktopInstallModal = function() {
+    var modalEl = document.getElementById('hamakar-desktop-install-modal');
+    if (modalEl) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+};
+
+window.executeNativeInstallPrompt = function() {
+    if (window.installHamakarDesktopApp) {
+        window.installHamakarDesktopApp();
+    } else {
+        alert('لطفاً از طریق منوی مرورگر خود گزینه Install Hamakar ERP را انتخاب نمایید.');
+    }
+};
+</script>

@@ -196,7 +196,11 @@
                 deferredInstallPrompt = null;
             });
         } else {
-            alert('برای نصب نسخه دسکتاپ هماکار در مرورگر کروم یا مایکروسافت اج:\nروی آیکون نصب (Install) در انتهای نوار آدرس کلیک فرمایید.');
+            if (typeof window.showDesktopInstallModal === 'function') {
+                window.showDesktopInstallModal();
+            } else {
+                alert('برای نصب نسخه دسکتاپ هماکار در مرورگر کروم یا مایکروسافت اج:\nروی آیکون نصب (Install) در انتهای نوار آدرس کلیک فرمایید.');
+            }
         }
     };
 

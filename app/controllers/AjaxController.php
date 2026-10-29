@@ -1,7 +1,5 @@
 <?php
-// app/controllers/AjaxController.php - نسخه نهایی با چت خصوصی
-
-// این فایل‌ها باید در index.php اصلی بارگذاری شوند، اما برای اطمینان اینجا هم قرار می‌دهیم
+// app/controllers/AjaxController.php - نسخه نهایی با چت خصوصی و ارسال پیوست
 require_once __DIR__ . '/../models/Chat.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../lib/numberToWords.php'; 
@@ -53,28 +51,58 @@ class AjaxController {
             exit();
         } else {
              header('Content-Type: application/json; charset=utf-8');
-             http_response_code(403); // Forbidden
+             http_response_code(403);
              echo json_encode(['status' => 'error', 'message' => 'Authentication required.']);
              exit();
         }
     }
     
-    // ارسال پیام جدید به یک کاربر مشخص
+    // ارسال پیام جدید به یک کاربر مشخص (با پشتیبانی از فایل یا عکس)
     public function sendMessage() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $this->auth->check()) {
-            $data = [
-                'sender_user_id' => $this->auth->user()->id,
-                'receiver_user_id' => (int)$_POST['receiver_id'],
-                'message_text' => sanitize($_POST['message_text'] ?? ''),
-                'file_path' => null, 
-                'file_name' => null
-            ];
-            
-            if ($this->chatModel->createMessage($data)) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['status' => 'success']);
-                exit();
+            $filePath = null;
+            $fileName = null;
+
+            if (!empty($_FILES['attachment']['name']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../../public/uploads/chat/';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0777, true);
+                }
+                $orig = basename($_FILES['attachment']['name']);
+                $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig);
+                $targetFile = $uploadDir . $safeName;
+                if (move_uploaded_file($_FILES['attachment']['tmp_name'], $targetFile)) {
+                    $filePath = 'public/uploads/chat/' . $safeName;
+                    $fileName = $orig;
+                }
             }
+
+            $receiverId = (int)($_POST['receiver_id'] ?? 0);
+            $messageText = sanitize($_POST['message_text'] ?? '');
+
+            if ($receiverId > 0 && (!empty($messageText) || !empty($filePath))) {
+                $data = [
+                    'sender_user_id' => $this->auth->user()->id,
+                    'receiver_user_id' => $receiverId,
+                    'message_text' => $messageText,
+                    'file_path' => $filePath, 
+                    'file_name' => $fileName
+                ];
+                
+                if ($this->chatModel->createMessage($data)) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode([
+                        'status' => 'success',
+                        'file_name' => $fileName,
+                        'file_path' => $filePath ? (APP_URL . '/' . $filePath) : null
+                    ]);
+                    exit();
+                }
+            }
+
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'error', 'message' => 'پیام یا فایل معتبر ارسال نشده است.']);
+            exit();
         }
     }
 
@@ -96,14 +124,12 @@ class AjaxController {
             exit();
         }
     }
-     public function numberToWords() {
-        header('Content-Type: application/json');
 
+    public function numberToWords() {
+        header('Content-Type: application/json; charset=utf-8');
         $number = $_GET['number'] ?? 0;
-
-        $words = numberToWords((int)$number); // ✅ استفاده از تابع
-
+        $words = numberToWords((int)$number);
         echo json_encode(['words' => $words . ' ریال']);
+        exit();
     }
-
-} 
+}

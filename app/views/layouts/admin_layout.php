@@ -255,6 +255,14 @@ main {
         z-index: 1060 !important;
         box-shadow: -8px 0 30px rgba(0,0,0,0.35) !important;
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    .sidebar-nav {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 120px !important;
+        flex: 1 1 auto !important;
     }
     
     #sidebar.toggled {
@@ -1177,6 +1185,38 @@ function filterAdminModulesGrid(query) {
     });
 }
 
+
+// Universal Persian Datepicker Auto-Initializer across all modules
+$(document).ready(function() {
+    function initPersianPickers() {
+        if (typeof $.fn.persianDatepicker === 'function') {
+            $('.persian-datepicker, .persian-date, input.persianDatepicker, input[type="date"], input[name*="date"], input[id*="date"], input[placeholder*="تاریخ"]').each(function() {
+                var $this = $(this);
+                if (!$this.hasClass('pdate-initialized')) {
+                    if ($this.attr('type') === 'date') {
+                        $this.attr('type', 'text');
+                    }
+                    $this.addClass('pdate-initialized');
+                    $this.persianDatepicker({
+                        format: 'YYYY/MM/DD',
+                        autoClose: true,
+                        initialValue: false,
+                        calendar: {
+                            persian: {
+                                locale: 'fa'
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    }
+    initPersianPickers();
+    $(document).ajaxComplete(function() {
+        initPersianPickers();
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const toggler = document.getElementById('sidebarToggleTop');
     if (toggler) {
@@ -1193,6 +1233,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<?php include __DIR__ . '/../shared/offline_sync_widget.php'; ?>
+<script src="<?php echo APP_URL; ?>/assets/js/offline-engine.js"></script>
+<?php include __DIR__ . '/../shared/chat_widget.php'; ?>
 </body>
 </html>

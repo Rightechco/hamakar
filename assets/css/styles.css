@@ -230,6 +230,14 @@ main {
         z-index: 1060 !important;
         box-shadow: -8px 0 30px rgba(0,0,0,0.35) !important;
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    .sidebar-nav {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 120px !important;
+        flex: 1 1 auto !important;
     }
     
     #sidebar.toggled {

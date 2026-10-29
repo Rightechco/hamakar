@@ -4291,7 +4291,7 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         $id = $_GET['id'] ?? null;
         if (!$id) {
             FlashMessage::set('message', 'شناسه فاکتور مشخص نشده است.', 'error');
-            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
         }
         require_once __DIR__ . '/../models/TaxpayerInvoice.php';
         $moadianModel = new TaxpayerInvoice();
@@ -4301,14 +4301,14 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         } else {
             FlashMessage::set('message', $res['message'], 'error');
         }
-        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
     }
 
     public function inquiryMoadian() {
         $id = $_GET['id'] ?? null;
         if (!$id) {
             FlashMessage::set('message', 'شناسه فاکتور مودیان مشخص نشده است.', 'error');
-            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
         }
         require_once __DIR__ . '/../models/TaxpayerInvoice.php';
         $moadianModel = new TaxpayerInvoice();
@@ -4318,7 +4318,7 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         } else {
             FlashMessage::set('message', 'نتیجه استعلام: ' . $res['message'], 'warning');
         }
-        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
     }
 
     public function cancelMoadian() {
@@ -4326,7 +4326,7 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         $reason = $_POST['reason'] ?? $_GET['reason'] ?? 'ابطال بنا به درخواست مودی';
         if (!$id) {
             FlashMessage::set('message', 'شناسه فاکتور جهت ابطال مشخص نشده است.', 'error');
-            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
         }
         require_once __DIR__ . '/../models/TaxpayerInvoice.php';
         $moadianModel = new TaxpayerInvoice();
@@ -4336,7 +4336,7 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         } else {
             FlashMessage::set('message', $res['message'], 'error');
         }
-        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
     }
 
     public function saveMoadianSettings() {
@@ -4349,7 +4349,7 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
             } else {
                 FlashMessage::set('message', 'خطا در ذخیره تنظیمات سامانه مودیان.', 'error');
             }
-            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices#settings-pane');
         }
     }
 
@@ -4882,4 +4882,25 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         }
         redirect(APP_URL . '/index.php?page=admin&action=backups');
     }
+
+    public function testMoadianConnection() {
+        $this->auth->restrict(['admin']);
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $res = $moadianModel->testConnectionAndKeys();
+        echo json_encode(['status' => 'success', 'data' => $res]);
+        exit();
+    }
+
+    public function generateMoadianKeys() {
+        $this->auth->restrict(['admin']);
+        header('Content-Type: application/json; charset=utf-8');
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $res = $moadianModel->generateStandardRsaKeys();
+        echo json_encode(['status' => 'success', 'data' => $res]);
+        exit();
+    }
+
 }
