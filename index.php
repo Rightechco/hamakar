@@ -215,35 +215,43 @@ switch ($page) {
             case 'dashboard': $targetMethod = 'dashboard'; break;
 
             // --- ماژول‌های سازمانی جدید ---
-            case 'moadian_invoices': $targetMethod = 'moadianInvoices'; break;
+            case 'moadian_invoices':
+            case 'moadianInvoices': $targetMethod = 'moadianInvoices'; break;
             case 'send_to_moadian': $targetMethod = 'sendToMoadian'; break;
             
-            case 'treasury_cheques': $targetMethod = 'treasuryCheques'; break;
+            case 'treasury_cheques':
+            case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
             case 'create_cheque': $targetMethod = 'createCheque'; break;
             case 'store_cheque': $targetMethod = 'storeCheque'; break;
             case 'change_cheque_status': $targetMethod = 'changeChequeStatus'; break;
-            case 'treasury_rasgiri': $targetMethod = 'treasuryRasgiri'; break;
+            case 'treasury_rasgiri':
+            case 'treasuryRasgiri': $targetMethod = 'treasuryRasgiri'; break;
             
             case 'boms': $targetMethod = 'boms'; break;
             case 'create_bom': $targetMethod = 'createBom'; break;
             case 'store_bom': $targetMethod = 'storeBom'; break;
-            case 'production_orders': $targetMethod = 'productionOrders'; break;
+            case 'production_orders':
+            case 'productionOrders': $targetMethod = 'productionOrders'; break;
             case 'create_production_order': $targetMethod = 'createProductionOrder'; break;
             case 'store_production_order': $targetMethod = 'storeProductionOrder'; break;
             case 'complete_production_order': $targetMethod = 'completeProductionOrder'; break;
             
-            case 'procurement_requisitions': $targetMethod = 'procurementRequisitions'; break;
+            case 'procurement_requisitions':
+            case 'procurementRequisitions': $targetMethod = 'procurementRequisitions'; break;
             case 'create_requisition': $targetMethod = 'createRequisition'; break;
             case 'store_requisition': $targetMethod = 'storeRequisition'; break;
             case 'approve_requisition': $targetMethod = 'approveRequisition'; break;
             
-            case 'contract_guarantees': $targetMethod = 'contractGuarantees'; break;
+            case 'contract_guarantees':
+            case 'contractGuarantees': $targetMethod = 'contractGuarantees'; break;
             case 'store_guarantee': $targetMethod = 'storeGuarantee'; break;
             case 'update_guarantee_status': $targetMethod = 'updateGuaranteeStatus'; break;
             
-            case 'ai_analytics': $targetMethod = 'aiAnalytics'; break;
+            case 'ai_analytics':
+            case 'aiAnalytics': $targetMethod = 'aiAnalytics'; break;
             
-            case 'workflow_rules': $targetMethod = 'workflowRules'; break;
+            case 'workflow_rules':
+            case 'workflowRules': $targetMethod = 'workflowRules'; break;
             case 'store_workflow_rule': $targetMethod = 'storeWorkflowRule'; break;
             case 'toggle_workflow_rule': $targetMethod = 'toggleWorkflowRule'; break;
 
@@ -533,35 +541,43 @@ switch ($page) {
             case 'dashboard': $targetMethod = 'dashboard'; break;
 
             // --- ماژول‌های سازمانی جدید ---
-            case 'moadian_invoices': $targetMethod = 'moadianInvoices'; break;
+            case 'moadian_invoices':
+            case 'moadianInvoices': $targetMethod = 'moadianInvoices'; break;
             case 'send_to_moadian': $targetMethod = 'sendToMoadian'; break;
             
-            case 'treasury_cheques': $targetMethod = 'treasuryCheques'; break;
+            case 'treasury_cheques':
+            case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
             case 'create_cheque': $targetMethod = 'createCheque'; break;
             case 'store_cheque': $targetMethod = 'storeCheque'; break;
             case 'change_cheque_status': $targetMethod = 'changeChequeStatus'; break;
-            case 'treasury_rasgiri': $targetMethod = 'treasuryRasgiri'; break;
+            case 'treasury_rasgiri':
+            case 'treasuryRasgiri': $targetMethod = 'treasuryRasgiri'; break;
             
             case 'boms': $targetMethod = 'boms'; break;
             case 'create_bom': $targetMethod = 'createBom'; break;
             case 'store_bom': $targetMethod = 'storeBom'; break;
-            case 'production_orders': $targetMethod = 'productionOrders'; break;
+            case 'production_orders':
+            case 'productionOrders': $targetMethod = 'productionOrders'; break;
             case 'create_production_order': $targetMethod = 'createProductionOrder'; break;
             case 'store_production_order': $targetMethod = 'storeProductionOrder'; break;
             case 'complete_production_order': $targetMethod = 'completeProductionOrder'; break;
             
-            case 'procurement_requisitions': $targetMethod = 'procurementRequisitions'; break;
+            case 'procurement_requisitions':
+            case 'procurementRequisitions': $targetMethod = 'procurementRequisitions'; break;
             case 'create_requisition': $targetMethod = 'createRequisition'; break;
             case 'store_requisition': $targetMethod = 'storeRequisition'; break;
             case 'approve_requisition': $targetMethod = 'approveRequisition'; break;
             
-            case 'contract_guarantees': $targetMethod = 'contractGuarantees'; break;
+            case 'contract_guarantees':
+            case 'contractGuarantees': $targetMethod = 'contractGuarantees'; break;
             case 'store_guarantee': $targetMethod = 'storeGuarantee'; break;
             case 'update_guarantee_status': $targetMethod = 'updateGuaranteeStatus'; break;
             
-            case 'ai_analytics': $targetMethod = 'aiAnalytics'; break;
+            case 'ai_analytics':
+            case 'aiAnalytics': $targetMethod = 'aiAnalytics'; break;
             
-            case 'workflow_rules': $targetMethod = 'workflowRules'; break;
+            case 'workflow_rules':
+            case 'workflowRules': $targetMethod = 'workflowRules'; break;
             case 'store_workflow_rule': $targetMethod = 'storeWorkflowRule'; break;
             case 'toggle_workflow_rule': $targetMethod = 'toggleWorkflowRule'; break;
 
@@ -589,35 +605,43 @@ switch ($page) {
             case 'dashboard': $targetMethod = 'dashboard'; break;
 
             // --- ماژول‌های سازمانی جدید ---
-            case 'moadian_invoices': $targetMethod = 'moadianInvoices'; break;
+            case 'moadian_invoices':
+            case 'moadianInvoices': $targetMethod = 'moadianInvoices'; break;
             case 'send_to_moadian': $targetMethod = 'sendToMoadian'; break;
             
-            case 'treasury_cheques': $targetMethod = 'treasuryCheques'; break;
+            case 'treasury_cheques':
+            case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
             case 'create_cheque': $targetMethod = 'createCheque'; break;
             case 'store_cheque': $targetMethod = 'storeCheque'; break;
             case 'change_cheque_status': $targetMethod = 'changeChequeStatus'; break;
-            case 'treasury_rasgiri': $targetMethod = 'treasuryRasgiri'; break;
+            case 'treasury_rasgiri':
+            case 'treasuryRasgiri': $targetMethod = 'treasuryRasgiri'; break;
             
             case 'boms': $targetMethod = 'boms'; break;
             case 'create_bom': $targetMethod = 'createBom'; break;
             case 'store_bom': $targetMethod = 'storeBom'; break;
-            case 'production_orders': $targetMethod = 'productionOrders'; break;
+            case 'production_orders':
+            case 'productionOrders': $targetMethod = 'productionOrders'; break;
             case 'create_production_order': $targetMethod = 'createProductionOrder'; break;
             case 'store_production_order': $targetMethod = 'storeProductionOrder'; break;
             case 'complete_production_order': $targetMethod = 'completeProductionOrder'; break;
             
-            case 'procurement_requisitions': $targetMethod = 'procurementRequisitions'; break;
+            case 'procurement_requisitions':
+            case 'procurementRequisitions': $targetMethod = 'procurementRequisitions'; break;
             case 'create_requisition': $targetMethod = 'createRequisition'; break;
             case 'store_requisition': $targetMethod = 'storeRequisition'; break;
             case 'approve_requisition': $targetMethod = 'approveRequisition'; break;
             
-            case 'contract_guarantees': $targetMethod = 'contractGuarantees'; break;
+            case 'contract_guarantees':
+            case 'contractGuarantees': $targetMethod = 'contractGuarantees'; break;
             case 'store_guarantee': $targetMethod = 'storeGuarantee'; break;
             case 'update_guarantee_status': $targetMethod = 'updateGuaranteeStatus'; break;
             
-            case 'ai_analytics': $targetMethod = 'aiAnalytics'; break;
+            case 'ai_analytics':
+            case 'aiAnalytics': $targetMethod = 'aiAnalytics'; break;
             
-            case 'workflow_rules': $targetMethod = 'workflowRules'; break;
+            case 'workflow_rules':
+            case 'workflowRules': $targetMethod = 'workflowRules'; break;
             case 'store_workflow_rule': $targetMethod = 'storeWorkflowRule'; break;
             case 'toggle_workflow_rule': $targetMethod = 'toggleWorkflowRule'; break;
 
@@ -852,7 +876,7 @@ switch ($page) {
         exit();
 }
 // فراخوانی متد کنترلر
-if ($controller && method_exists($controller, $targetMethod)) {
+if ($controller && !empty($targetMethod) && method_exists($controller, $targetMethod)) {
     if ($hasParam) {
         // مطمئن شوید که $id وجود دارد تا خطا رخ ندهد
         if ($id !== null) {
