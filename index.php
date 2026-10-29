@@ -424,7 +424,8 @@ switch ($page) {
             case 'accounting_expenses': $targetMethod = 'accountingExpenses'; break;
             case 'store_expense': $targetMethod = 'storeExpense'; break;
             case 'account_ledger': $targetMethod = 'accountLedger'; break;
-            case 'general_journal': $targetMethod = 'generalJournal'; break;
+            case 'accounting':
+        case 'general_journal': $targetMethod = 'generalJournal'; break;
             case 'vat_report': $targetMethod = 'vatReport'; break; 
             case 'close_fiscal_year': $targetMethod = 'closeFiscalYear'; break;
             case 'delete_voucher': 
