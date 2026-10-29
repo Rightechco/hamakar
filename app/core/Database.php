@@ -72,10 +72,20 @@ class Database {
         return $this->stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
+    // Alias for fetchAll
+    public function resultSet() {
+        return $this->fetchAll();
+    }
+
     // Get single record as object
     public function fetch() {
         $this->execute();
         return $this->stmt->fetch(PDO::FETCH_OBJ);
+    }
+
+    // Alias for fetch
+    public function single() {
+        return $this->fetch();
     }
 
     // Get row count

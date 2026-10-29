@@ -40,7 +40,7 @@ class ContractGuarantee {
 
         $this->db->query($sql);
         if ($contractId) $this->db->bind(':cid', $contractId);
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function create($data) {

@@ -29,7 +29,7 @@ class WorkflowRule {
 
     public function getAll() {
         $this->db->query("SELECT * FROM workflow_rules ORDER BY id DESC");
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function create($data) {

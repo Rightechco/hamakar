@@ -19,20 +19,20 @@ class AiAnalyticsService {
                           WHERE i.status != 'paid' AND i.due_date < CURDATE()
                           GROUP BY c.id
                           ORDER BY debt DESC LIMIT 5");
-        $highRiskDebtors = $this->db->resultSet();
+        $highRiskDebtors = $this->db->fetchAll();
 
         // ۲. محاسبه جریان نقدینگی پیش‌بینی‌شده ۳۰ روز آینده (ورودی چک‌ها منهای بدهی‌ها)
         $this->db->query("SELECT SUM(amount) as incoming_cheques 
                           FROM cheques 
                           WHERE type = 'received' AND status = 'pending'");
-        $chequesRes = $this->db->single();
+        $chequesRes = $this->db->fetch();
         $predictedIncoming = (int)($chequesRes->incoming_cheques ?? 0);
 
         // ۳. هشدارهای نقطه‌سفارش انبار
         $this->db->query("SELECT p.name, p.stock 
                           FROM products p 
                           WHERE p.stock <= 5 LIMIT 5");
-        $criticalStock = $this->db->resultSet();
+        $criticalStock = $this->db->fetchAll();
 
         // ۴. پیشنهادات هوشمند سیستم (AI Insights)
         $insights = [];

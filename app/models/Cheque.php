@@ -46,13 +46,13 @@ class Cheque {
         $this->db->query($sql);
         if ($type) $this->db->bind(':type', $type);
         if ($status) $this->db->bind(':status', $status);
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function getById($id) {
         $this->db->query("SELECT * FROM cheques WHERE id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        return $this->db->fetch();
     }
 
     public function create($data) {

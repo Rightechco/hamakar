@@ -43,7 +43,7 @@ class ProductionOrder {
                           LEFT JOIN warehouses w1 ON po.raw_warehouse_id = w1.id
                           LEFT JOIN warehouses w2 ON po.finished_warehouse_id = w2.id
                           ORDER BY po.id DESC");
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function getById($id) {
@@ -53,7 +53,7 @@ class ProductionOrder {
                           LEFT JOIN products p ON b.product_id = p.id
                           WHERE po.id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        return $this->db->fetch();
     }
 
     public function create($data) {

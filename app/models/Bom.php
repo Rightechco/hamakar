@@ -42,7 +42,7 @@ class Bom {
                           FROM boms b
                           LEFT JOIN products p ON b.product_id = p.id
                           ORDER BY b.id DESC");
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function getById($id) {
@@ -51,7 +51,7 @@ class Bom {
                           LEFT JOIN products p ON b.product_id = p.id
                           WHERE b.id = :id");
         $this->db->bind(':id', $id);
-        $bom = $this->db->single();
+        $bom = $this->db->fetch();
         if ($bom) {
             $bom->items = $this->getItems($id);
         }
@@ -65,7 +65,7 @@ class Bom {
                           LEFT JOIN units u ON bi.unit_id = u.id
                           WHERE bi.bom_id = :bom_id");
         $this->db->bind(':bom_id', $bomId);
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function create($data, $items = []) {

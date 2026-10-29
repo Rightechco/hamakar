@@ -39,13 +39,13 @@ class TaxpayerInvoice {
                           LEFT JOIN clients c ON s.client_id = c.id
                           ORDER BY m.id DESC LIMIT :limit");
         $this->db->bind(':limit', (int)$limit, PDO::PARAM_INT);
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function getById($id) {
         $this->db->query("SELECT * FROM moadian_invoices WHERE id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        return $this->db->fetch();
     }
 
     /**

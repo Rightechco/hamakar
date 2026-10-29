@@ -43,7 +43,7 @@ class PurchaseRequisition {
 
         $this->db->query($sql);
         if ($status) $this->db->bind(':status', $status);
-        return $this->db->resultSet();
+        return $this->db->fetchAll();
     }
 
     public function create($data) {
