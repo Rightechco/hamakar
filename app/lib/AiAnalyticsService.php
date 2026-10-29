@@ -29,9 +29,9 @@ class AiAnalyticsService {
         $predictedIncoming = (int)($chequesRes->incoming_cheques ?? 0);
 
         // ۳. هشدارهای نقطه‌سفارش انبار
-        $this->db->query("SELECT p.name, p.stock 
+        $this->db->query("SELECT p.name, p.inventory 
                           FROM products p 
-                          WHERE p.stock <= 5 LIMIT 5");
+                          WHERE p.inventory <= 5 LIMIT 5");
         $criticalStock = $this->db->fetchAll();
 
         // ۴. پیشنهادات هوشمند سیستم (AI Insights)

@@ -8,6 +8,10 @@ class Contract {
         $this->db = new Database();
     }
 
+    public function getAll() {
+        return $this->getAllContracts();
+    }
+
     public function getAllContracts() {
         $this->db->query("SELECT contracts.*, clients.name as client_name FROM contracts JOIN clients ON contracts.client_id = clients.id ORDER BY contracts.created_at DESC");
         return $this->db->fetchAll();
