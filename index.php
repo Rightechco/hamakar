@@ -130,9 +130,38 @@ $action = $_GET['action'] ?? 'index';
 $id = $_GET['id'] ?? null;
 
 
+// تشخیص محیط دمو
+$isDemoHost = (strpos($_SERVER['HTTP_HOST'] ?? '', 'demo') !== false) || isset($_GET['demo']) || isset($_GET['demo_login']);
+
+// در محیط دمو صفحه اول لاگین حذف شده و ورود خودکار انجام می‌پذیرد
+if ($isDemoHost && !$auth->check()) {
+    $auth->autoLoginDemo();
+}
+
 // منطق ریدایرکت‌های اولیه
-if ($page === 'home' && !$auth->check()) {
-    redirect(APP_URL . '/index.php?page=login&action=show');
+if ($page === 'home') {
+    if (!$auth->check()) {
+        if ($isDemoHost) {
+            $auth->autoLoginDemo();
+            redirect(APP_URL . '/index.php?page=admin&action=dashboard');
+        } else {
+            redirect(APP_URL . '/index.php?page=login&action=show');
+        }
+    } else {
+        if ($auth->isAdmin()) {
+            redirect(APP_URL . '/index.php?page=admin&action=dashboard');
+        } elseif ($auth->isEmployee()) {
+            redirect(APP_URL . '/index.php?page=employee&action=dashboard');
+        } else {
+            redirect(APP_URL . '/index.php?page=client&action=dashboard');
+        }
+    }
+} elseif ($page === 'login' && $action === 'show' && $isDemoHost) {
+    // حذف کامل صفحه لاگین در ساب‌دومین دمو و هدایت آنی به میز کار
+    if (!$auth->check()) {
+        $auth->autoLoginDemo();
+    }
+    redirect(APP_URL . '/index.php?page=admin&action=dashboard');
 } elseif ($page === 'login' && $auth->check()) {
     if ($auth->isAdmin()) {
         redirect(APP_URL . '/index.php?page=admin&action=dashboard');

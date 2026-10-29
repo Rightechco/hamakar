@@ -36,6 +36,27 @@ class Auth {
         return false; // لاگین ناموفق
     }
 
+    public function autoLoginDemo() {
+        try {
+            $this->db->query("SELECT * FROM users WHERE role = 'admin' AND is_active = 1 ORDER BY id ASC LIMIT 1");
+            $user = $this->db->fetch();
+        } catch (\Exception $e) {
+            $user = null;
+        }
+
+        if (!$user) {
+            $user = (object)[
+                'id' => 1,
+                'name' => 'مدیر سامانه (دمو هماکار)',
+                'email' => 'demo@hamakar.ir',
+                'role' => 'admin'
+            ];
+        }
+
+        $this->createSession($user);
+        return true;
+    }
+
     public function createSession($user) {
         session_regenerate_id(true); // تولید مجدد Session ID برای امنیت بیشتر
         $_SESSION['user_id'] = $user->id;
