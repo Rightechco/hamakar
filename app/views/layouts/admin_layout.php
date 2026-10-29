@@ -26,23 +26,24 @@ global $auth;
     <link href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css" rel="stylesheet"/>
     
     <style>
+        
         :root {
-            --sidebar-bg: #2c3e50;
-            --content-bg: #f8f9fa;
-            --navbar-bg: #ffffff;
-            --text-color: #343a40;
-            --text-muted: #6c757d;
-            --primary-color: #0d6efd;
-            --border-color: #dee2e6;
-            --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
-            --shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+            --sidebar-bg: #0f172a;
+            --content-bg: #f8fafc;
+            --navbar-bg: rgba(255, 255, 255, 0.94);
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --primary-color: #4f46e5;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+            --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
             --font-family: 'Vazirmatn', sans-serif;
-            --sidebar-text-color: #bdc3c7;
-            --sidebar-icon-color: #7f8c8d;
-            --sidebar-hover-bg: #34495e;
-            --sidebar-active-bg: #34495e;
-            --sidebar-active-text: #fff;
-            --sidebar-heading-color: #95a5a6;
+            --sidebar-text-color: #94a3b8;
+            --sidebar-icon-color: #64748b;
+            --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+            --sidebar-active-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            --sidebar-active-text: #ffffff;
+            --sidebar-heading-color: #64748b;
         }
         body {
             background-color: var(--content-bg);
@@ -50,6 +51,7 @@ global $auth;
             color: var(--text-color);
             transition: margin-right 0.3s;
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
         .wrapper {
             display: flex;
@@ -57,54 +59,107 @@ global $auth;
             align-items: stretch;
         }
         #sidebar {
-            min-width: 250px;
-            max-width: 250px;
+            min-width: 260px;
+            max-width: 260px;
             background: var(--sidebar-bg);
             color: #fff;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1030;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.08);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
         }
         #sidebar.toggled {
-            margin-right: -250px;
+            margin-right: -260px;
         }
         #content-wrapper {
             width: 100%;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         main {
-            padding: 2rem;
+            padding: 1.75rem 2rem 85px;
         }
-        .sidebar-header { padding: 20px; text-align: center; font-size: 22px; font-weight: 700; color: #fff; border-bottom: 1px solid #34495e;}
-        .sidebar-header i { margin-left: 10px; }
+        .sidebar-header { 
+            padding: 22px 20px; 
+            text-align: center; 
+            font-size: 20px; 
+            font-weight: 800; 
+            color: #fff; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: -0.3px;
+        }
+        .sidebar-header i { margin-left: 10px; color: #4f46e5; }
         .sidebar-nav { padding: 15px 0; }
         .sidebar-nav .nav-item .nav-link {
-            display: flex; align-items: center; padding: 12px 20px;
-            color: var(--sidebar-text-color); border-radius: 0;
-            margin-bottom: 5px; text-decoration: none; font-weight: 500;
+            display: flex; 
+            align-items: center; 
+            padding: 10px 18px;
+            color: var(--sidebar-text-color); 
+            border-radius: 12px;
+            margin: 3px 12px; 
+            text-decoration: none; 
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .sidebar-nav .nav-link i { width: 20px; margin-left: 15px; font-size: 1rem; color: var(--sidebar-icon-color); }
-        .sidebar-nav .nav-link:hover { background-color: var(--sidebar-hover-bg); color: #fff; }
-        .sidebar-nav .nav-link.active { background-color: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
-        .sidebar-heading { padding: 1rem 1.5rem 0.5rem; font-size: 0.8rem; color: var(--sidebar-heading-color); text-transform: uppercase; letter-spacing: 0.5px; }
-        .sidebar-submenu { background-color: rgba(0,0,0,0.1); padding-left: 30px; list-style: none; }
-        .sidebar-submenu .submenu-item { display: block; padding: 10px 20px; color: var(--sidebar-text-color); text-decoration: none; font-size: 0.9rem; }
-        .sidebar-submenu .submenu-item:hover { background-color: rgba(0,0,0,0.2); color: #fff; }
+        .sidebar-nav .nav-link i { width: 20px; margin-left: 14px; font-size: 1rem; color: var(--sidebar-icon-color); }
+        .sidebar-nav .nav-link:hover { 
+            background-color: var(--sidebar-hover-bg); 
+            color: #fff; 
+            transform: translateX(-2px);
+        }
+        .sidebar-nav .nav-link.active { 
+            background: var(--sidebar-active-bg); 
+            color: var(--sidebar-active-text); 
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        }
+        .sidebar-heading { 
+            padding: 1.25rem 1.5rem 0.4rem; 
+            font-size: 0.74rem; 
+            color: var(--sidebar-heading-color); 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            font-weight: 800;
+        }
+        .sidebar-submenu { background-color: rgba(0,0,0,0.2); padding-left: 0; list-style: none; margin: 4px 12px; border-radius: 10px; overflow: hidden; }
+        .sidebar-submenu .submenu-item { display: block; padding: 9px 20px 9px 15px; color: var(--sidebar-text-color); text-decoration: none; font-size: 0.84rem; font-weight: 500; transition: all 0.15s; }
+        .sidebar-submenu .submenu-item:hover { background-color: rgba(255,255,255,0.06); color: #fff; }
         .top-navbar {
-            background: var(--navbar-bg); padding: 0.75rem 1.5rem;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow-sm);
+            background: var(--navbar-bg); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 0.85rem 1.75rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
         }
         .content-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1020; display: none;
+            background: rgba(15, 23, 42, 0.5); 
+            backdrop-filter: blur(3px);
+            z-index: 1020; display: none;
         }
         @media (max-width: 768px) {
             #sidebar {
-                margin-right: -250px;
+                margin-right: -260px;
                 position: fixed;
                 height: 100%;
             }
+            #sidebar.toggled {
+                margin-right: 0;
+            }
+            body.sidebar-toggled #content-wrapper {
+                margin-right: 260px;
+            }
+            .content-overlay {
+                display: none;
+            }
+            #sidebar.toggled ~ #content-wrapper .content-overlay {
+                display: block;
+            }
+        }
+
             #sidebar.toggled {
                 margin-right: 0;
             }
@@ -435,7 +490,7 @@ global $auth;
         <i class="fas fa-file-invoice-dollar"></i>
         <span>مودیان</span>
     </a>
-    <button type="button" class="admin-suha-item" onclick="const t = document.getElementById('sidebarToggleTop'); if(t) t.click();">
+    <button type="button" class="admin-suha-item" onclick="toggleAdminModulesDrawer()">
         <i class="fas fa-bars-staggered"></i>
         <span>ماژول‌ها</span>
     </button>
@@ -448,6 +503,118 @@ global $auth;
         <span>خروج</span>
     </a>
 </nav>
+
+
+<!-- Suha Admin Mobile Bottom Sheet Drawer for all 16 Modules -->
+<div class="suha-sheet-backdrop" id="admin-sheet-backdrop" onclick="toggleAdminModulesDrawer()"></div>
+<div class="suha-bottom-sheet" id="admin-modules-drawer">
+    <div class="suha-sheet-handle" onclick="toggleAdminModulesDrawer()"></div>
+    <div class="suha-sheet-header">
+        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-cubes text-primary me-2"></i>همه ماژول‌های سامانه هماکار</h5>
+        <button type="button" class="suha-sheet-close" onclick="toggleAdminModulesDrawer()" aria-label="بستن">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="suha-sheet-search">
+        <input type="text" id="admin-module-filter-input" placeholder="جستجوی سریع زیرسیستم..." oninput="filterAdminModulesGrid(this.value)">
+    </div>
+    <div class="suha-sheet-body" id="admin-sheet-grid">
+        <a href="index.php?page=admin&action=dashboard" class="suha-module-card" data-title="پیشخوان و مدیریت">
+            <div class="suha-module-icon" style="background:#eef2ff; color:#4f46e5;"><i class="fas fa-home"></i></div>
+            <div class="suha-module-title">پیشخوان اصلی</div>
+            <div class="suha-module-desc">گزارشات و KPI‌های زنده</div>
+        </a>
+        <a href="index.php?page=admin&action=moadianInvoices" class="suha-module-card" data-title="سامانه مودیان مالیاتی">
+            <div class="suha-module-icon" style="background:#fef2f2; color:#ef4444;"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="suha-module-title">سامانه مودیان</div>
+            <div class="suha-module-desc">کارپوشه مالیاتی رسمی</div>
+        </a>
+        <a href="index.php?page=admin&action=treasuryCheques" class="suha-module-card" data-title="چک صیادی و خزانه‌داری">
+            <div class="suha-module-icon" style="background:#ecfdf5; color:#10b981;"><i class="fas fa-money-check-dollar"></i></div>
+            <div class="suha-module-title">چک و خزانه‌داری</div>
+            <div class="suha-module-desc">راس‌گیری و استعلام صیادی</div>
+        </a>
+        <a href="index.php?page=admin&action=contractGuarantees" class="suha-module-card" data-title="تضامین و وثایق">
+            <div class="suha-module-icon" style="background:#eff6ff; color:#3b82f6;"><i class="fas fa-shield-halved"></i></div>
+            <div class="suha-module-title">تضامین و وثایق</div>
+            <div class="suha-module-desc">ضمانت‌نامه‌های بانکی</div>
+        </a>
+        <a href="index.php?page=admin&action=boms" class="suha-module-card" data-title="فرمول ساخت BOM">
+            <div class="suha-module-icon" style="background:#fffbeb; color:#d97706;"><i class="fas fa-sitemap"></i></div>
+            <div class="suha-module-title">فرمول ساخت (BOM)</div>
+            <div class="suha-module-desc">درخت محصول و بهای تمام‌شده</div>
+        </a>
+        <a href="index.php?page=admin&action=productionOrders" class="suha-module-card" data-title="دستورات تولید">
+            <div class="suha-module-icon" style="background:#f5f3ff; color:#7c3aed;"><i class="fas fa-industry"></i></div>
+            <div class="suha-module-title">دستورات تولید</div>
+            <div class="suha-module-desc">رهگیری خطوط و کارگاه</div>
+        </a>
+        <a href="index.php?page=admin&action=procurementRequisitions" class="suha-module-card" data-title="درخواست‌های خرید و تدارکات">
+            <div class="suha-module-icon" style="background:#ecfeff; color:#0891b2;"><i class="fas fa-cart-flatbed"></i></div>
+            <div class="suha-module-title">خرید و تدارکات</div>
+            <div class="suha-module-desc">سفارشات خرید و تدارکات</div>
+        </a>
+        <a href="index.php?page=admin&action=aiAnalytics" class="suha-module-card" data-title="دستیار هوش مصنوعی">
+            <div class="suha-module-icon" style="background:#fae8ff; color:#a21caf;"><i class="fas fa-brain"></i></div>
+            <div class="suha-module-title">هوش مصنوعی AI</div>
+            <div class="suha-module-desc">تحلیل سود و پیش‌بینی</div>
+        </a>
+        <a href="index.php?page=admin&action=accounting" class="suha-module-card" data-title="حسابداری مالی دوبل">
+            <div class="suha-module-icon" style="background:#eef2ff; color:#4f46e5;"><i class="fas fa-calculator"></i></div>
+            <div class="suha-module-title">حسابداری مالی</div>
+            <div class="suha-module-desc">دفاتر روزنامه، کل و تراز</div>
+        </a>
+        <a href="index.php?page=admin&action=invoices" class="suha-module-card" data-title="فاکتورها و فروش">
+            <div class="suha-module-icon" style="background:#fdf2f8; color:#db2777;"><i class="fas fa-receipt"></i></div>
+            <div class="suha-module-title">فاکتورها</div>
+            <div class="suha-module-desc">فاکتورهای فروش و رسمی</div>
+        </a>
+        <a href="index.php?page=admin&action=contracts" class="suha-module-card" data-title="قراردادها و پیمان‌ها">
+            <div class="suha-module-icon" style="background:#eff6ff; color:#2563eb;"><i class="fas fa-file-contract"></i></div>
+            <div class="suha-module-title">قراردادها</div>
+            <div class="suha-module-desc">صورت‌وضعیت و تعهدات</div>
+        </a>
+        <a href="index.php?page=admin&action=warehouses" class="suha-module-card" data-title="انبارداری">
+            <div class="suha-module-icon" style="background:#f0fdf4; color:#16a34a;"><i class="fas fa-warehouse"></i></div>
+            <div class="suha-module-title">انبارداری</div>
+            <div class="suha-module-desc">کاردکس کالا، رسید و حواله</div>
+        </a>
+    </div>
+</div>
+
+<script>
+function toggleAdminModulesDrawer() {
+    const backdrop = document.getElementById('admin-sheet-backdrop');
+    const drawer = document.getElementById('admin-modules-drawer');
+    if (drawer.classList.contains('open')) {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('open');
+        document.body.style.overflow = '';
+    } else {
+        drawer.classList.add('open');
+        backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            const input = document.getElementById('admin-module-filter-input');
+            if (input) input.focus();
+        }, 200);
+    }
+}
+
+function filterAdminModulesGrid(query) {
+    const q = query.trim().toLowerCase();
+    const cards = document.querySelectorAll('#admin-sheet-grid .suha-module-card');
+    cards.forEach(c => {
+        const title = (c.getAttribute('data-title') || '').toLowerCase();
+        const text = c.textContent.toLowerCase();
+        if (!q || title.includes(q) || text.includes(q)) {
+            c.style.display = 'flex';
+        } else {
+            c.style.display = 'none';
+        }
+    });
+}
+</script>
 
 </body>
 </html>
