@@ -208,6 +208,12 @@ switch ($page) {
             case 'moadian_invoices':
             case 'moadianInvoices': $targetMethod = 'moadianInvoices'; break;
             case 'send_to_moadian': $targetMethod = 'sendToMoadian'; break;
+            case 'inquiry_moadian': $targetMethod = 'inquiryMoadian'; break;
+            case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
+            case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
+            case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
+            case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
             case 'treasury_cheques':
             case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
@@ -535,6 +541,12 @@ switch ($page) {
             case 'moadian_invoices':
             case 'moadianInvoices': $targetMethod = 'moadianInvoices'; break;
             case 'send_to_moadian': $targetMethod = 'sendToMoadian'; break;
+            case 'inquiry_moadian': $targetMethod = 'inquiryMoadian'; break;
+            case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
+            case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
+            case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
+            case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
             case 'treasury_cheques':
             case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
@@ -599,6 +611,12 @@ switch ($page) {
             case 'moadian_invoices':
             case 'moadianInvoices': $targetMethod = 'moadianInvoices'; break;
             case 'send_to_moadian': $targetMethod = 'sendToMoadian'; break;
+            case 'inquiry_moadian': $targetMethod = 'inquiryMoadian'; break;
+            case 'cancel_moadian': $targetMethod = 'cancelMoadian'; break;
+            case 'print_moadian': $targetMethod = 'printMoadian'; $hasParam = true; break;
+            case 'save_moadian_settings': $targetMethod = 'saveMoadianSettings'; break;
+            case 'send_invoice_to_moadian': $targetMethod = 'sendInvoiceToMoadian'; break;
+            case 'api_docs': $targetMethod = 'showApiDocs'; break;
             
             case 'treasury_cheques':
             case 'treasuryCheques': $targetMethod = 'treasuryCheques'; break;
@@ -859,6 +877,12 @@ switch ($page) {
                 $hasParam = true;
                 break;
         }
+        break;
+
+    case 'api':
+        require_once __DIR__ . '/app/controllers/ApiController.php';
+        $controller = new ApiController();
+        $targetMethod = $action;
         break;
         
     default:

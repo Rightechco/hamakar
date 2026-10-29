@@ -34,8 +34,8 @@ class Invoice {
     }
 
     public function create($data) {
-        $sql = 'INSERT INTO invoices (invoice_number, client_id, contract_id, invoice_type, category_id, issue_date, due_date, subtotal, vat_amount, total_amount, description, status) 
-                VALUES (:invoice_number, :client_id, :contract_id, :invoice_type, :category_id, :issue_date, :due_date, :subtotal, :vat_amount, :total_amount, :description, :status)';
+        $sql = 'INSERT INTO invoices (invoice_number, client_id, contract_id, invoice_type, is_official, category_id, issue_date, due_date, subtotal, vat_amount, total_amount, description, status, economic_code, national_id, pattern_type) 
+                VALUES (:invoice_number, :client_id, :contract_id, :invoice_type, :is_official, :category_id, :issue_date, :due_date, :subtotal, :vat_amount, :total_amount, :description, :status, :economic_code, :national_id, :pattern_type)';
         
         $this->db->query($sql);
         
@@ -43,30 +43,51 @@ class Invoice {
         $this->db->bind(':client_id', $data['client_id']);
         $this->db->bind(':contract_id', $data['contract_id'] ?? null);
         $this->db->bind(':invoice_type', $data['invoice_type'] ?? 'contract');
+        $this->db->bind(':is_official', isset($data['is_official']) ? (int)$data['is_official'] : 1);
         $this->db->bind(':category_id', $data['category_id'] ?? null);
         $this->db->bind(':issue_date', $data['issue_date']);
         $this->db->bind(':due_date', $data['due_date']);
         $this->db->bind(':subtotal', $data['subtotal']);
-        $this->db->bind(':vat_amount', $data['vat_amount']);
+        $this->db->bind(':vat_amount', $data['vat_amount'] ?? 0);
         $this->db->bind(':total_amount', $data['total_amount']);
         $this->db->bind(':description', $data['description']);
         $this->db->bind(':status', $data['status']);
+        $this->db->bind(':economic_code', $data['economic_code'] ?? null);
+        $this->db->bind(':national_id', $data['national_id'] ?? null);
+        $this->db->bind(':pattern_type', $data['pattern_type'] ?? 1);
         
         return $this->db->execute() ? $this->db->lastInsertId() : false;
     }
 
     public function update($id, $data) {
-        $sql = 'UPDATE invoices SET invoice_number = :invoice_number, client_id = :client_id, contract_id = :contract_id, category_id = :category_id, issue_date = :issue_date, due_date = :due_date, total_amount = :total_amount, description = :description, status = :status, updated_at = CURRENT_TIMESTAMP WHERE id = :id';
+        $sql = 'UPDATE invoices SET 
+                    invoice_number = :invoice_number, 
+                    client_id = :client_id, 
+                    contract_id = :contract_id, 
+                    category_id = :category_id, 
+                    issue_date = :issue_date, 
+                    due_date = :due_date, 
+                    total_amount = :total_amount, 
+                    description = :description, 
+                    status = :status, 
+                    is_official = :is_official,
+                    economic_code = :economic_code,
+                    national_id = :national_id,
+                    updated_at = CURRENT_TIMESTAMP 
+                WHERE id = :id';
         $this->db->query($sql);
         $this->db->bind(':invoice_number', $data['invoice_number']);
         $this->db->bind(':client_id', $data['client_id']);
-        $this->db->bind(':contract_id', $data['contract_id']);
+        $this->db->bind(':contract_id', $data['contract_id'] ?? null);
         $this->db->bind(':category_id', $data['category_id'] ?? null);
         $this->db->bind(':issue_date', $data['issue_date']);
         $this->db->bind(':due_date', $data['due_date']);
         $this->db->bind(':total_amount', $data['total_amount']);
         $this->db->bind(':description', $data['description']);
         $this->db->bind(':status', $data['status']);
+        $this->db->bind(':is_official', isset($data['is_official']) ? (int)$data['is_official'] : 1);
+        $this->db->bind(':economic_code', $data['economic_code'] ?? null);
+        $this->db->bind(':national_id', $data['national_id'] ?? null);
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
@@ -237,7 +258,10 @@ class Invoice {
                     i.issue_date AS date,
                     i.status,
                     'contract' AS type,
-                    i.description AS item_description
+                    i.description AS item_description,
+                    COALESCE(i.is_official, 1) AS is_official,
+                    i.moadian_taxid,
+                    COALESCE(i.moadian_status, 'not_sent') AS moadian_status
                 FROM invoices i
                 JOIN clients c ON i.client_id = c.id
                 LEFT JOIN contracts co ON i.contract_id = co.id

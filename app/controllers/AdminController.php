@@ -1065,7 +1065,8 @@ public function invoices() {
         'start_date' => $this->convertJalaliToGregorianString($_GET['start_date'] ?? null),
         'end_date' => $this->convertJalaliToGregorianString($_GET['end_date'] ?? null),
         'search' => sanitize($_GET['search'] ?? null),
-        'invoice_type' => sanitize($_GET['invoice_type'] ?? null)
+        'invoice_type' => sanitize($_GET['invoice_type'] ?? null),
+        'official_type' => (isset($_GET['official_type']) && $_GET['official_type'] !== '') ? (int)$_GET['official_type'] : null,
     ];
     
     // ✅ استفاده از متد getAllCombinedInvoices برای دریافت داده‌های کامل
@@ -1076,6 +1077,8 @@ public function invoices() {
         $clientMatch = empty($filters['client_id']) || $invoice->client_id == $filters['client_id'];
         $statusMatch = empty($filters['status']) || $invoice->status == $filters['status'];
         $typeMatch = empty($filters['invoice_type']) || $invoice->type == $filters['invoice_type'];
+        $officialMatch = !isset($filters['official_type']) || 
+                         (isset($invoice->is_official) ? ((int)$invoice->is_official === $filters['official_type']) : ($filters['official_type'] === 1));
         
         $searchMatch = empty($filters['search']) || 
                        (isset($invoice->invoice_number) && strpos($invoice->invoice_number, $filters['search']) !== false) || 
@@ -1086,7 +1089,7 @@ public function invoices() {
         $startMatch = empty($filters['start_date']) || $issueDateTimestamp >= strtotime($filters['start_date']);
         $endMatch = empty($filters['end_date']) || $issueDateTimestamp <= strtotime($filters['end_date']);
 
-        return $clientMatch && $statusMatch && $typeMatch && $searchMatch && $startMatch && $endMatch;
+        return $clientMatch && $statusMatch && $typeMatch && $officialMatch && $searchMatch && $startMatch && $endMatch;
     });
 
     // حالا $filteredInvoices شامل داده‌های فیلترشده است و view می‌تواند از آن استفاده کند.
@@ -2355,11 +2358,13 @@ public function invoices() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $startDate = $this->convertJalaliToGregorianString($_POST['start_date']);
             $endDate = $this->convertJalaliToGregorianString($_POST['end_date']);
+            $filterType = sanitize($_POST['filter_type'] ?? 'official');
 
             if ($startDate && $endDate) {
-                $data['reportData'] = $this->financialReportModel->getVatReportData($startDate, $endDate);
+                $data['reportData'] = $this->financialReportModel->getVatReportData($startDate, $endDate, $filterType);
                 $data['startDateJalali'] = $_POST['start_date'];
                 $data['endDateJalali'] = $_POST['end_date'];
+                $data['filterType'] = $filterType;
             }
         }
 
@@ -3613,6 +3618,7 @@ public function storeInvoice() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $invoiceType = sanitize($_POST['invoice_type'] ?? 'contract');
+            $isOfficial = isset($_POST['is_official']) ? (int)$_POST['is_official'] : 1;
             
             $invoiceData = [
                 'invoice_number' => sanitize($_POST['invoice_number'] ?? ''),
@@ -3622,7 +3628,11 @@ public function storeInvoice() {
                 'description' => sanitize($_POST['description'] ?? ''),
                 'status' => sanitize($_POST['status'] ?? 'pending'),
                 'invoice_type' => $invoiceType,
-                'vat_rate' => sanitize($_POST['vat_rate'] ?? 9),
+                'is_official' => $isOfficial,
+                'economic_code' => sanitize($_POST['economic_code'] ?? ''),
+                'national_id' => sanitize($_POST['national_id'] ?? ''),
+                'pattern_type' => (int)($_POST['pattern_type'] ?? 1),
+                'vat_rate' => $isOfficial ? (float)sanitize($_POST['vat_rate'] ?? 10) : 0,
                 'subtotal' => 0,
             ];
 
@@ -3708,7 +3718,23 @@ public function storeInvoice() {
             }
 
             if ($result && is_array($result) && isset($result['invoiceId'])) {
-                $message = 'فاکتور با موفقیت ایجاد و سند آن صادر شد.';
+                $invoiceId = $result['invoiceId'];
+                // ارسال خودکار به مودیان در صورت انتخاب کاربر
+                if ($isOfficial && !empty($_POST['send_to_moadian'])) {
+                    require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+                    $moadianModel = new TaxpayerInvoice();
+                    $mId = $moadianModel->createFromInvoice($invoiceId, (int)($_POST['pattern_type'] ?? 1));
+                    if ($mId) {
+                        $mRes = $moadianModel->transmitToTaxAuthority($mId);
+                        if ($mRes['success']) {
+                            $result['moadianStatus'] = 'sent';
+                        }
+                    }
+                }
+                $message = 'فاکتور (' . ($isOfficial ? 'رسمی مودیان' : 'غیر رسمی داخلی') . ') با موفقیت ایجاد و سند آن صادر شد.';
+                if (!empty($result['moadianStatus'])) {
+                    $message .= ' همچنین به صورت مستقیم به سامانه مودیان ارسال و تایید گردید.';
+                }
                 if ($result['smsStatus'] === 'success') {
                     $message .= ' پیامک اطلاع‌رسانی با موفقیت ارسال شد.';
                 } elseif ($result['smsStatus'] === 'warning') {
@@ -3755,6 +3781,7 @@ public function storeInvoice() {
         'client_id' => $invoiceData['client_id'],
         'contract_id' => $invoiceData['contract_id'] ?? null,
         'invoice_type' => $invoiceData['invoice_type'] ?? 'contract',
+        'is_official' => $invoiceData['is_official'] ?? 1,
         'category_id' => $invoiceData['category_id'] ?? null,
         'issue_date' => $invoiceData['issue_date'],
         'due_date' => $invoiceData['due_date'],
@@ -3763,6 +3790,9 @@ public function storeInvoice() {
         'total_amount' => $invoiceData['total_amount'],
         'description' => $invoiceData['description'],
         'status' => $invoiceData['status'],
+        'economic_code' => $invoiceData['economic_code'] ?? null,
+        'national_id' => $invoiceData['national_id'] ?? null,
+        'pattern_type' => $invoiceData['pattern_type'] ?? 1,
     ];
 
     $invoiceId = $this->invoiceModel->create($invoiceModelData);
@@ -4230,17 +4260,30 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
     }
 
     // =========================================================================
-    // ۱. سامانه مودیان مالیاتی (Taxpayer System)
+    // ۱. سامانه مودیان مالیاتی کشور (Comprehensive Taxpayer System)
     // =========================================================================
     public function moadianInvoices() {
         require_once __DIR__ . '/../models/TaxpayerInvoice.php';
         $moadianModel = new TaxpayerInvoice();
-        $invoices = $moadianModel->getAll(100);
+        $status = $_GET['status'] ?? null;
+        $subject = $_GET['subject'] ?? null;
+        $invoices = $moadianModel->getAll(200, $status, $subject);
+        $stats = $moadianModel->getSummaryStats();
+        $settings = $moadianModel->getSettings();
+
+        // دریافت کلید API فعال برای نمایش در تب اتصال به نرم‌افزار حسابداری
+        $this->db->query("SELECT * FROM api_keys WHERE status = 'active' ORDER BY id ASC LIMIT 1");
+        $apiKey = $this->db->fetch();
 
         view('admin/moadian/index', [
             'layout' => 'admin_layout',
-            'title' => 'سامانه مودیان مالیاتی',
-            'invoices' => $invoices
+            'title' => 'سامانه مودیان مالیاتی و فاکتورهای رسمی',
+            'invoices' => $invoices,
+            'stats' => $stats,
+            'settings' => $settings,
+            'apiKey' => $apiKey,
+            'currentStatus' => $status,
+            'currentSubject' => $subject
         ]);
     }
 
@@ -4254,11 +4297,108 @@ private function sendInvoiceSms($invoiceData, $invoiceId) {
         $moadianModel = new TaxpayerInvoice();
         $res = $moadianModel->transmitToTaxAuthority($id);
         if ($res['success']) {
-            FlashMessage::set('message', $res['message'] . ' (شناسه یکتا: ' . $res['taxid'] . ')', 'success');
+            FlashMessage::set('message', $res['message'] . ' (شناسه یکتای مالیاتی: ' . $res['taxid'] . ' | کد پیگیری: ' . $res['uid'] . ')', 'success');
         } else {
             FlashMessage::set('message', $res['message'], 'error');
         }
         redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+    }
+
+    public function inquiryMoadian() {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            FlashMessage::set('message', 'شناسه فاکتور مودیان مشخص نشده است.', 'error');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        }
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $res = $moadianModel->inquiryStatus($id);
+        if ($res['success']) {
+            FlashMessage::set('message', 'استعلام تایید شد: ' . $res['message'] . ' (وضعیت: ' . $res['status_title'] . ' | شناسه یکتا: ' . $res['taxid'] . ')', 'success');
+        } else {
+            FlashMessage::set('message', 'نتیجه استعلام: ' . $res['message'], 'warning');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+    }
+
+    public function cancelMoadian() {
+        $id = $_GET['id'] ?? null;
+        $reason = $_POST['reason'] ?? $_GET['reason'] ?? 'ابطال بنا به درخواست مودی';
+        if (!$id) {
+            FlashMessage::set('message', 'شناسه فاکتور جهت ابطال مشخص نشده است.', 'error');
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        }
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $res = $moadianModel->cancelInvoice($id, $reason);
+        if ($res['success']) {
+            FlashMessage::set('message', $res['message'] . ' (شناسه ابطالی: ' . $res['revocation_taxid'] . ')', 'success');
+        } else {
+            FlashMessage::set('message', $res['message'], 'error');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+    }
+
+    public function saveMoadianSettings() {
+        $this->auth->restrict(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+            $moadianModel = new TaxpayerInvoice();
+            if ($moadianModel->saveSettings($_POST)) {
+                FlashMessage::set('message', 'تنظیمات و کلیدهای سامانه مودیان با موفقیت ذخیره شد.', 'success');
+            } else {
+                FlashMessage::set('message', 'خطا در ذخیره تنظیمات سامانه مودیان.', 'error');
+            }
+            redirect(APP_URL . '/index.php?page=admin&action=moadian_invoices');
+        }
+    }
+
+    public function sendInvoiceToMoadian() {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            FlashMessage::set('message', 'شناسه فاکتور مشخص نشده است.', 'error');
+            redirect(APP_URL . '/index.php?page=admin&action=invoices');
+        }
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $mId = $moadianModel->createFromInvoice($id);
+        if ($mId) {
+            $res = $moadianModel->transmitToTaxAuthority($mId);
+            FlashMessage::set('message', 'فاکتور رسمی با موفقیت به سامانه مودیان ارسال و تایید شد. (شناسه یکتای مالیاتی: ' . $res['taxid'] . ')', 'success');
+        } else {
+            FlashMessage::set('message', 'خطا در ثبت فاکتور در کارپوشه مودیان.', 'error');
+        }
+        redirect(APP_URL . '/index.php?page=admin&action=invoices');
+    }
+
+    public function printMoadian($id) {
+        require_once __DIR__ . '/../models/TaxpayerInvoice.php';
+        $moadianModel = new TaxpayerInvoice();
+        $invoice = $moadianModel->getById($id);
+        if (!$invoice) {
+            die('صورتحساب مودیان یافت نشد.');
+        }
+        $settings = $moadianModel->getSettings();
+        $packet = $moadianModel->buildMoadianJsonPacket($id);
+        view('admin/moadian/print', [
+            'layout' => false,
+            'title' => 'صورتحساب رسمی الکترونیکی مودیان - ' . $invoice->taxid,
+            'invoice' => $invoice,
+            'settings' => $settings,
+            'packet' => $packet
+        ]);
+    }
+
+    public function showApiDocs() {
+        $this->auth->restrict(['admin', 'accountant']);
+        $this->db->query("SELECT * FROM api_keys WHERE status = 'active' ORDER BY id ASC LIMIT 1");
+        $apiKey = $this->db->fetch();
+
+        view('admin/settings/api_docs', [
+            'layout' => 'admin_layout',
+            'title' => 'مستندات و وب‌سرویس اتصال نرم‌افزارهای حسابداری (API)',
+            'apiKey' => $apiKey
+        ]);
     }
 
     // =========================================================================

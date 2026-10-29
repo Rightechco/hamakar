@@ -187,6 +187,76 @@ function getClientDetails($clients, $clientId) {
                         <option value="mixed" <?php echo ($invoice && $invoice->invoice_type == 'mixed') ? 'selected' : ''; ?>>ترکیبی (خدمات و محصول)</option>
                     </select>
                 </div>
+
+                <!-- انتخاب نوع رسمیت و تنظیمات سامانه مودیان -->
+                <div class="card border p-3 rounded-3 mb-3" style="background:#f8fafc; border-color:#e2e8f0 !important;">
+                    <label class="form-label fw-bold text-dark mb-2">
+                        <i class="fas fa-stamp text-primary me-1"></i> نوع رسمیت فاکتور:
+                    </label>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="d-flex align-items-center p-2 rounded-3 border bg-white shadow-sm" style="cursor:pointer;">
+                                <input type="radio" name="is_official" value="1" id="official_radio" class="form-check-input me-2 mt-0" <?php echo (!isset($invoice) || ($invoice->is_official ?? 1) == 1) ? 'checked' : ''; ?> onchange="toggleOfficialFields()">
+                                <div>
+                                    <span class="fw-bold text-success d-block"><i class="fas fa-check-circle me-1"></i> فاکتور رسمی (سامانه مودیان)</span>
+                                    <small class="text-muted" style="font-size:0.75rem;">دارای ارزش افزوده ۱۰٪، کد اقتصادی و ثبت در کارپوشه دارایی</small>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="d-flex align-items-center p-2 rounded-3 border bg-white shadow-sm" style="cursor:pointer;">
+                                <input type="radio" name="is_official" value="0" id="unofficial_radio" class="form-check-input me-2 mt-0" <?php echo (isset($invoice) && ($invoice->is_official ?? 1) == 0) ? 'checked' : ''; ?> onchange="toggleOfficialFields()">
+                                <div>
+                                    <span class="fw-bold text-secondary d-block"><i class="fas fa-file-alt me-1"></i> فاکتور غیر رسمی (داخلی)</span>
+                                    <small class="text-muted" style="font-size:0.75rem;">ویژه امور داخلی، بدون ارسال به مودیان و بدون ارزش افزوده اجباری</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- فیلدهای تکمیلی سامانه مودیان -->
+                    <div id="moadian-extra-fields" style="<?php echo (isset($invoice) && ($invoice->is_official ?? 1) == 0) ? 'display:none;' : 'display:block;'; ?>">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label for="economic_code" class="form-label text-muted small">کد اقتصادی خریدار:</label>
+                                <input type="text" class="form-control form-control-sm font-monospace" id="economic_code" name="economic_code" placeholder="۴۱۱۱۱۱۱۱۱۱۱۱" value="<?php echo htmlspecialchars($invoice->economic_code ?? ''); ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="national_id" class="form-label text-muted small">شناسه ملی / کد ملی خریدار:</label>
+                                <input type="text" class="form-control form-control-sm font-monospace" id="national_id" name="national_id" placeholder="۱۰۱۰۱۰۱۰۱۰۱" value="<?php echo htmlspecialchars($invoice->national_id ?? ''); ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="pattern_type" class="form-label text-muted small">الگوی صورتحساب الکترونیکی:</label>
+                                <select class="form-select form-select-sm" id="pattern_type" name="pattern_type">
+                                    <option value="1" <?php echo (($invoice->pattern_type ?? 1) == 1) ? 'selected' : ''; ?>>الگوی ۱: فروش با اطلاعات کامل خریدار</option>
+                                    <option value="2" <?php echo (($invoice->pattern_type ?? 1) == 2) ? 'selected' : ''; ?>>الگوی ۲: فروش به مصرف کننده نهایی</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="send_to_moadian" name="send_to_moadian" value="1" checked>
+                            <label class="form-check-label small fw-bold text-primary" for="send_to_moadian">
+                                <i class="fas fa-paper-plane me-1"></i> ارسال خودکار به کارپوشه سامانه مودیان بلافاصله پس از ثبت فاکتور
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                function toggleOfficialFields() {
+                    var isOfficial = document.getElementById('official_radio').checked;
+                    var extra = document.getElementById('moadian-extra-fields');
+                    var vatInput = document.getElementById('vat_rate');
+                    if (isOfficial) {
+                        if (extra) extra.style.display = 'block';
+                        if (vatInput) vatInput.value = '10';
+                    } else {
+                        if (extra) extra.style.display = 'none';
+                        if (vatInput) vatInput.value = '0';
+                    }
+                    if (typeof calculateTotals === 'function') calculateTotals();
+                }
+                </script>
                 
                 <hr>
                 

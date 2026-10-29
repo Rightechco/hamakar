@@ -81,6 +81,14 @@ function getStatusBadgeColor($status) {
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="flex-grow-1">
+                    <label for="official_type" class="form-label text-muted small">رسمیت / مودیان:</label>
+                    <select class="form-select form-select-sm" id="official_type" name="official_type">
+                        <option value="">همه (رسمی و غیررسمی)</option>
+                        <option value="1" <?php echo (isset($_GET['official_type']) && $_GET['official_type'] === '1') ? 'selected' : ''; ?>>فقط رسمی (سامانه مودیان)</option>
+                        <option value="0" <?php echo (isset($_GET['official_type']) && $_GET['official_type'] === '0') ? 'selected' : ''; ?>>فقط غیر رسمی (داخلی)</option>
+                    </select>
+                </div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-secondary btn-sm">اعمال فیلتر</button>
                     <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices" class="btn btn-outline-secondary btn-sm">پاک کردن فیلتر</a>
@@ -95,6 +103,7 @@ function getStatusBadgeColor($status) {
                         <th>شماره فاکتور</th>
                         <th>مشتری/فروشنده</th>
                         <th>نوع</th>
+                        <th>رسمیت / مودیان</th>
                         <th>مربوط به</th>
                         <th>تاریخ</th>
                         <th>مبلغ کل</th>
@@ -131,6 +140,23 @@ function getStatusBadgeColor($status) {
                                         elseif ($invoice->type === 'purchase') echo 'خرید';
                                         else echo 'نامشخص';
                                     ?>
+                                </td>
+                                <td>
+                                    <?php $isOfficial = (isset($invoice->is_official) && $invoice->is_official == 0) ? false : true; ?>
+                                    <?php if ($isOfficial): ?>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill" title="فاکتور رسمی مشمول سامانه مودیان">
+                                            <i class="fas fa-stamp me-1"></i> رسمی (مودیان)
+                                        </span>
+                                        <?php if (!empty($invoice->moadian_taxid)): ?>
+                                            <div class="small font-monospace text-primary mt-1" style="font-size:0.7rem;" title="TaxID">
+                                                <?php echo substr($invoice->moadian_taxid, 0, 10) . '...'; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill" title="فاکتور غیر رسمی و مدیریت داخلی">
+                                            <i class="fas fa-file-alt me-1"></i> غیر رسمی (داخلی)
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php
@@ -170,6 +196,11 @@ function getStatusBadgeColor($status) {
                                         <?php if (!empty($viewAction)): ?>
                                             <a href="<?php echo APP_URL; ?>/index.php?page=<?php echo $page; ?>&action=<?php echo $viewAction; ?>&id=<?php echo htmlspecialchars($invoice->id); ?>" class="btn btn-sm btn-info" title="مشاهده">
                                                 <i class="fas fa-eye"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if ($isOfficial && empty($invoice->moadian_taxid) && $invoice->type === 'contract'): ?>
+                                            <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=send_invoice_to_moadian&id=<?php echo htmlspecialchars($invoice->id); ?>" class="btn btn-sm btn-outline-primary" title="ارسال آنلاین به سامانه مودیان" onclick="return confirm('آیا می‌خواهید این فاکتور رسمی مستقیماً به سامانه مودیان ارسال و تایید شود؟');">
+                                                <i class="fas fa-paper-plane"></i>
                                             </a>
                                         <?php endif; ?>
                                         <?php if (!empty($deleteAction) && $auth->hasRole(['admin', 'accountant'])): ?>

@@ -61,7 +61,7 @@ class Sale {
         $this->db->beginTransaction();
         try {
             // ایجاد رکورد فروش
-            $this->db->query('INSERT INTO sales (client_id, sale_date, subtotal, vat_rate, vat_amount, total_amount, status) VALUES (:client_id, :sale_date, :subtotal, :vat_rate, :vat_amount, :total_amount, :status)');
+            $this->db->query('INSERT INTO sales (client_id, sale_date, subtotal, vat_rate, vat_amount, total_amount, status, is_official) VALUES (:client_id, :sale_date, :subtotal, :vat_rate, :vat_amount, :total_amount, :status, :is_official)');
             $this->db->bind(':client_id', $data['client_id']);
             $this->db->bind(':sale_date', $data['sale_date']);
             $this->db->bind(':subtotal', $data['subtotal']);
@@ -69,6 +69,7 @@ class Sale {
             $this->db->bind(':vat_amount', $data['vat_amount']);
             $this->db->bind(':total_amount', $data['total_amount']);
             $this->db->bind(':status', $data['status']);
+            $this->db->bind(':is_official', isset($data['is_official']) ? (int)$data['is_official'] : 1);
             $this->db->execute();
             $saleId = $this->db->lastInsertId();
 
