@@ -49,13 +49,42 @@ $currentSubject = $currentSubject ?? '';
     background: #f8fafc;
     color: #1e293b;
 }
+@media (max-width: 768px) {
+    .page-header-actions {
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.45rem !important;
+    }
+    .page-header-actions .btn {
+        flex: 1 1 calc(50% - 0.45rem) !important;
+        font-size: 0.76rem !important;
+        padding: 0.5rem 0.4rem !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+    }
+    .moadian-card {
+        border-radius: 16px !important;
+        padding: 0.85rem 0.75rem !important;
+    }
+    .taxid-pill {
+        max-width: 100% !important;
+        font-size: 0.72rem !important;
+        padding: 3px 6px !important;
+    }
+    .badge {
+        white-space: normal !important;
+        text-align: center !important;
+        line-height: 1.35 !important;
+    }
+}
 </style>
 
 <div class="container-fluid py-3">
     <!-- Top Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">
                     <i class="fas fa-signal me-1"></i> متصل به سرور مودیان (<?php echo ($settings && $settings->is_sandbox) ? 'Sandbox آزمایشی' : 'تولید زنده Live'; ?>)
                 </span>
@@ -68,7 +97,7 @@ $currentSubject = $currentSubject ?? '';
             </h3>
             <span class="text-muted small">مدیریت صدور، امضای الکترونیک، ارسال خودکار به کارپوشه، ابطال و اصلاح صورتحساب‌های رسمی</span>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap page-header-actions">
             <a href="<?php echo APP_URL; ?>/index.php?page=admin&action=invoices_create" class="btn btn-primary rounded-3 px-3 shadow-sm">
                 <i class="fas fa-plus me-1"></i> صدور فاکتور رسمی جدید
             </a>

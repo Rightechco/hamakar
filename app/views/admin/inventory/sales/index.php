@@ -23,9 +23,10 @@ function getStatusBadgeColor($status) {
         border-radius: 15px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
-    .table-responsive-modern {
-        border-radius: 10px;
-        overflow: hidden;
+    .table-responsive-modern, .table-responsive {
+        border-radius: 12px;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
     .table-hover tbody tr:hover {
         background-color: #f8f9fa;

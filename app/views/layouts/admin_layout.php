@@ -6,7 +6,7 @@ global $auth;
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,7 +19,7 @@ global $auth;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <link href="<?php echo APP_URL; ?>/assets/css/styles.css?v=4.0.0" rel="stylesheet">
+    <link href="<?php echo APP_URL; ?>/assets/css/styles.css?v=4.1.0" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css" rel="stylesheet"/>
     
     <style>
@@ -63,8 +63,19 @@ global $auth;
     --shadow-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.08);
 }
 
-* {
-    box-sizing: border-box;
+html {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    -webkit-text-size-adjust: 100% !important;
+}
+
+*, *::before, *::after {
+    box-sizing: inherit !important;
 }
 
 body {
@@ -75,9 +86,13 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    position: relative !important;
+    min-height: 100vh !important;
 }
 
 a {
@@ -223,7 +238,7 @@ main {
     color: #fff; 
 }
 
-/* CRITICAL MOBILE SIDEBAR BEHAVIOR (MUST HIDE OFF-SCREEN) */
+/* CRITICAL MOBILE SIDEBAR & VIEWPORT ISOLATION */
 @media (max-width: 768px) {
     #sidebar {
         position: fixed !important;
@@ -231,16 +246,21 @@ main {
         right: 0 !important;
         bottom: 0 !important;
         height: 100vh !important;
-        width: 275px !important;
+        width: 280px !important;
         max-width: 85vw !important;
         margin-right: 0 !important;
         transform: translateX(105%) !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
         z-index: 1060 !important;
         box-shadow: -8px 0 30px rgba(0,0,0,0.35) !important;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
     
     #sidebar.toggled {
         transform: translateX(0) !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
     }
 
     .content-overlay.active {
@@ -248,7 +268,7 @@ main {
     }
 
     main {
-        padding: 1rem 0.85rem 100px !important;
+        padding: 0.85rem 0.5rem 100px !important;
     }
 }
 
@@ -755,23 +775,142 @@ main {
     50% { box-shadow: 0 10px 28px rgba(6, 182, 212, 0.55); }
 }
 
+/* ==========================================================================
+   Comprehensive Zero-Overflow & Native App Mobile Overrides
+   ========================================================================== */
+#hamakar-offline-widget {
+    position: fixed !important;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1035;
+    max-width: calc(100vw - 32px) !important;
+    box-sizing: border-box !important;
+}
+
 @media (max-width: 768px) {
     .admin-suha-bottom-nav { display: flex !important; }
-    main { padding: 1rem 0.85rem 100px !important; }
-    .chat-widget-toggler { bottom: 80px !important; }
-    .chat-window { bottom: 150px !important; }
+    
+    .top-navbar {
+        padding: 0.5rem 0.75rem !important;
+        height: 58px !important;
+    }
 
-    .dashboard-header-actions {
+    /* Bootstrap Row Zero Bleed */
+    .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        max-width: 100% !important;
+    }
+    .row > * {
+        padding-left: 0.35rem !important;
+        padding-right: 0.35rem !important;
+        max-width: 100% !important;
+    }
+    .container-fluid, .container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    main {
+        padding: 0.85rem 0.5rem 100px !important;
+    }
+
+    /* Card & Surfaces Containment */
+    .card, .moadian-card, .settings-card, .card-modern {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        max-width: 100% !important;
+        border-radius: 16px !important;
+    }
+    .card-body, .moadian-card, .settings-card {
+        padding: 1rem 0.75rem !important;
+    }
+    .card-header {
+        padding: 0.85rem 0.75rem !important;
+    }
+
+    /* Silky Smooth Horizontal Swipe Pills for Tabs */
+    .nav-pills, .nav-tabs, .nav-pills-moadian, .nav-pills-settings {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        gap: 0.4rem !important;
+        padding: 0.4rem !important;
+        border-radius: 14px !important;
+        max-width: 100% !important;
+        white-space: nowrap !important;
+    }
+    .nav-pills::-webkit-scrollbar, .nav-tabs::-webkit-scrollbar,
+    .nav-pills-moadian::-webkit-scrollbar, .nav-pills-settings::-webkit-scrollbar {
+        display: none !important;
+        height: 0 !important;
+    }
+    .nav-pills .nav-item, .nav-tabs .nav-item {
+        flex: 0 0 auto !important;
+    }
+    .nav-pills .nav-link, .nav-tabs .nav-link {
+        font-size: 0.78rem !important;
+        padding: 0.5rem 0.85rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* Header Actions Auto-Wrap */
+    .dashboard-header-actions, .page-header-actions, .header-actions {
         width: 100% !important;
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
         gap: 0.45rem !important;
     }
-    .dashboard-header-actions .btn {
-        width: 100% !important;
-        padding: 0.55rem 0.35rem !important;
-        font-size: 0.74rem !important;
+    .dashboard-header-actions .btn, .page-header-actions .btn, .header-actions .btn {
+        flex: 1 1 calc(50% - 0.45rem) !important;
+        min-width: 110px !important;
+        padding: 0.5rem 0.4rem !important;
+        font-size: 0.76rem !important;
+        text-align: center !important;
         white-space: nowrap !important;
+    }
+
+    .badge {
+        max-width: 100% !important;
+        white-space: normal !important;
+        text-align: center !important;
+        line-height: 1.35 !important;
+    }
+
+    /* Tables Auto-Scroll */
+    table.table:not(.table-responsive table):not(.datepicker-table) {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Floating Widgets */
+    #hamakar-offline-widget {
+        bottom: 78px !important;
+        left: 10px !important;
+        right: auto !important;
+        padding: 5px 10px !important;
+        font-size: 0.7rem !important;
+        gap: 6px !important;
+        max-width: calc(100vw - 20px) !important;
+    }
+    #hamakar-offline-widget span#network-status-text {
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .chat-widget-toggler { bottom: 78px !important; right: 12px !important; }
+    .chat-window {
+        bottom: 145px !important;
+        right: 10px !important;
+        left: 10px !important;
+        width: auto !important;
+        max-width: calc(100vw - 20px) !important;
     }
 }
 
@@ -1043,6 +1182,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (toggler) {
         toggler.addEventListener('click', toggleSidebarMenu);
     }
+    // Auto-wrap any unwrapped tables for silky smooth horizontal scrolling with zero overflow
+    document.querySelectorAll('table:not(.table-responsive table):not(.datepicker-table)').forEach(function(tbl) {
+        if (!tbl.closest('.table-responsive')) {
+            var wrap = document.createElement('div');
+            wrap.className = 'table-responsive mb-3';
+            tbl.parentNode.insertBefore(wrap, tbl);
+            wrap.appendChild(tbl);
+        }
+    });
 });
 </script>
 <?php include __DIR__ . '/../shared/offline_sync_widget.php'; ?>

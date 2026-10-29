@@ -25,16 +25,50 @@ function getStatusBadgeColor($status) {
 
 <style>
     .card-modern {
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-radius: 18px;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+        border: 1px solid #e2e8f0;
     }
-    .table-responsive-modern {
-        border-radius: 10px;
-        overflow: hidden;
+    .table-responsive-modern, .table-responsive {
+        border-radius: 14px;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     .invoice-item-link {
-        font-weight: 600;
-        color: #343a40;
+        font-weight: 700;
+        color: var(--primary, #4f46e5);
+    }
+    @media (max-width: 768px) {
+        #filter-form .d-flex.flex-wrap {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+        }
+        #filter-form .flex-grow-1 {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        #filter-form .d-flex.gap-2 {
+            display: flex !important;
+            flex-direction: row !important;
+            width: 100% !important;
+        }
+        #filter-form .d-flex.gap-2 .btn {
+            flex: 1 !important;
+            white-space: nowrap !important;
+        }
+        .card-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+        }
+        .card-header .btn {
+            width: 100% !important;
+            text-align: center !important;
+        }
     }
 </style>
 

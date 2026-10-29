@@ -17,8 +17,9 @@ function getCategoryTypeInPersian($type) {
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
     .table-responsive {
-        border-radius: 8px;
-        overflow: hidden;
+        border-radius: 12px;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
     .table-hover tbody tr:hover {
         background-color: #f8f9fa;

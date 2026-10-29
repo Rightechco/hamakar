@@ -39,6 +39,13 @@ if (!isset($title)) $title = "ورود به پرتال سازمانی";
             -webkit-tap-highlight-color: transparent;
         }
 
+        html, body {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
+        }
+
         body {
             background-color: var(--bg-body);
             background-image: 
