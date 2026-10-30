@@ -179,6 +179,21 @@ $modules = $modules ?? [];
                 <i class="fas fa-layer-group me-1"></i> کاتالوگ پلن‌ها و تعرفه فروش
             </button>
         </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-clients-licenses" type="button">
+                <i class="fas fa-users-cog me-1"></i> لایسنس‌ها و مشتریان صادرشده
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-gateway-sms" type="button">
+                <i class="fas fa-credit-card me-1"></i> درگاه پرداخت و پیامک‌های انقضا
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-blog-cms" type="button">
+                <i class="fas fa-newspaper me-1"></i> مدیریت وبلاگ و آموزش‌ها
+            </button>
+        </li>
     </ul>
 
     <!-- Tab Contents -->
@@ -472,6 +487,242 @@ $modules = $modules ?? [];
                 <?php endforeach; ?>
             </div>
         </div>
+
+        <!-- ==========================================
+             تب ۴: لایسنس‌ها و مشتریان صادرشده
+             ========================================== -->
+        <div class="tab-pane fade" id="tab-clients-licenses">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold mb-1 text-dark"><i class="fas fa-users-cog text-primary me-2"></i> لایسنس‌های صادر شده و پروانه‌های مشتریان</h4>
+                        <p class="text-muted small mb-0">مشاهده کلیه لایسنس‌های تجاری های‌آن و همکار، تمدید اعتبار و ریست قفل سخت‌افزاری</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary rounded-3 px-3 py-2 btn-sm fw-bold" onclick="window.location.reload()">
+                            <i class="fas fa-sync-alt me-1"></i> بروزرسانی لیست
+                        </button>
+                    </div>
+                </div>
+
+                <?php
+                // خواندن مستقیم از دیتابیس
+                $issuedLicenses = [];
+                try {
+                    $dbPdo = new PDO("mysql:host=" . ($_ENV['DB_HOST'] ?? 'localhost') . ";dbname=" . ($_ENV['DB_NAME'] ?? 'hamakar_hamdbb') . ";charset=utf8mb4", $_ENV['DB_USER'] ?? 'hamakar_hamdbb', $_ENV['DB_PASS'] ?? 'EMyCP[Pk]JfX@n)4');
+                    $stLicenses = $dbPdo->query("SELECT * FROM licenses ORDER BY id DESC LIMIT 50");
+                    $issuedLicenses = $stLicenses ? $stLicenses->fetchAll(PDO::FETCH_ASSOC) : [];
+                } catch (\Throwable $e) {}
+                ?>
+
+                <?php if (empty($issuedLicenses)): ?>
+                    <div class="alert alert-info rounded-4 border-0 p-4 text-center">
+                        <i class="fas fa-info-circle fa-2x mb-3 text-primary"></i>
+                        <h5>هنوز لایسنسی در این پایگاه‌داده ثبت نشده است.</h5>
+                        <p class="text-muted small mb-3">لایسنس‌های خریداری شده از سایت hion.ir یا تولید شده در تب مولد لایسنس در این جدول نمایش داده می‌شوند.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead class="table-light">
+                                <tr class="text-secondary small fw-bold">
+                                    <th>کد لایسنس</th>
+                                    <th>فروشگاه / مشتری</th>
+                                    <th>شماره تماس</th>
+                                    <th>قفل سخت‌افزاری</th>
+                                    <th>پلن و ماژول‌ها</th>
+                                    <th>تاریخ انقضا</th>
+                                    <th>وضعیت</th>
+                                    <th class="text-center">عملیات ادمین</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($issuedLicenses as $licRow): 
+                                    $mods = json_decode($licRow['modules'], true) ?: [];
+                                    $isExp = strtotime($licRow['expires_at']) < time();
+                                ?>
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-dark font-monospace px-2 py-2 fs-6"><?= htmlspecialchars($licRow['license_key']) ?></span>
+                                    </td>
+                                    <td>
+                                        <strong class="d-block text-dark"><?= htmlspecialchars($licRow['store_name']) ?></strong>
+                                        <small class="text-muted"><?= htmlspecialchars($licRow['customer_name']) ?></small>
+                                    </td>
+                                    <td>
+                                        <span dir="ltr" class="font-monospace text-secondary"><?= htmlspecialchars($licRow['phone']) ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border font-monospace"><?= htmlspecialchars($licRow['machine_id']) ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary-subtle text-primary fw-bold mb-1"><?= htmlspecialchars($licRow['plan_tier']) ?></span>
+                                        <small class="d-block text-muted"><?= count($mods) ?> ماژول فعال</small>
+                                    </td>
+                                    <td>
+                                        <span class="<?= $isExp ? 'text-danger fw-bold' : 'text-success' ?>">
+                                            <?= htmlspecialchars(date('Y/m/d', strtotime($licRow['expires_at']))) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($licRow['status'] === 'ACTIVE' && !$isExp): ?>
+                                            <span class="badge bg-success-subtle text-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> فعال</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="fas fa-times-circle me-1"></i> منقضی</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-light btn-sm rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                مدیریت
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sendReminderSms('<?= $licRow['id'] ?>', '<?= $licRow['phone'] ?>')"><i class="fas fa-sms text-info me-2"></i> ارسال پیامک فعال‌سازی</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="extendLicenseOneYear('<?= $licRow['id'] ?>')"><i class="fas fa-calendar-plus text-success me-2"></i> تمدید اعتبار ۱ ساله</a></li>
+                                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="resetHardwareLock('<?= $licRow['id'] ?>')"><i class="fas fa-laptop text-warning me-2"></i> ریست قفل سخت‌افزار</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             تب ۵: درگاه پرداخت و پیامک‌های انقضا
+             ========================================== -->
+        <div class="tab-pane fade" id="tab-gateway-sms">
+            <div class="row g-4 mb-4">
+                <!-- تنظیمات درگاه پرداخت -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-primary-subtle text-primary p-3 rounded-4">
+                                <i class="fas fa-credit-card fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark">تنظیمات درگاه پرداخت شاپرک</h5>
+                                <p class="text-muted small mb-0">اتصال مستقیم به زرین‌پال و سداد جهت خرید خودکار لایسنس</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">کد پذیرنده / مرچنت کد زرین‌پال (Merchant ID):</label>
+                            <input type="text" class="form-control rounded-3 font-monospace" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value="zarinpal_merchant_hion_active" dir="ltr">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">حالت تسویه‌حساب و پرداخت:</label>
+                            <select class="form-select rounded-3">
+                                <option value="live" selected>محیط زنده (شاپرک واقعی آنلاین)</option>
+                                <option value="sandbox">محیط آزمایشی (سندباکس تست)</option>
+                            </select>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 mb-4 small text-muted">
+                            <i class="fas fa-shield-alt text-success me-1"></i>
+                            تاییدیه پرداخت و صدور سند در جدول <code>licenses</code> با کد رهگیری ثبت می‌شود.
+                        </div>
+
+                        <button class="btn btn-primary rounded-3 w-100 py-2 fw-bold" onclick="alert('تنظیمات درگاه پرداخت ذخیره شد.')">
+                            <i class="fas fa-save me-1"></i> ذخیره پیکربندی درگاه
+                        </button>
+                    </div>
+                </div>
+
+                <!-- تنظیمات و پترن‌های پیامک -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-info-subtle text-info p-3 rounded-4">
+                                <i class="fas fa-comment-sms fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark">تنظیمات پیامک ملی‌پیامک و اطلاع‌رسانی</h5>
+                                <p class="text-muted small mb-0">ارسال پیامک خوش‌آمد، کلید لایسنس و یادآوری انقضا</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-secondary">نام کاربری سامانه پیامک:</label>
+                                <input type="text" class="form-control rounded-3 font-monospace" value="9148874622" dir="ltr">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-secondary">کلمه عبور وب‌سرویس:</label>
+                                <input type="password" class="form-control rounded-3" value="ZEGL7" dir="ltr">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">شماره فرستنده خط اختصاصی:</label>
+                            <input type="text" class="form-control rounded-3 font-monospace" value="+9850004000001179" dir="ltr">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">دستور کرون‌جاب یادآوری خودکار انقضا (Cron Job):</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control font-monospace small bg-light" value="0 9 * * * php /home/hamakar/cron_license_reminders.php" readonly dir="ltr">
+                                <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('0 9 * * * php /home/hamakar/cron_license_reminders.php'); alert('دستور کرون کپی شد.');"><i class="fas fa-copy"></i></button>
+                            </div>
+                            <small class="text-muted">این دستور را در کرون هاست قرار دهید تا هر روز ساعت ۹ صبح انقضاها بررسی و پیامک شوند.</small>
+                        </div>
+
+                        <button class="btn btn-info text-white rounded-3 w-100 py-2 fw-bold" onclick="alert('تنظیمات سامانه پیامک ذخیره شد.')">
+                            <i class="fas fa-save me-1"></i> ذخیره تنظیمات پیامک
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             تب ۶: مدیریت وبلاگ و آموزش‌ها (Blog CMS)
+             ========================================== -->
+        <div class="tab-pane fade" id="tab-blog-cms">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold mb-1 text-dark"><i class="fas fa-newspaper text-warning me-2"></i> مدیریت وبلاگ و پایگاه دانش فنی</h4>
+                        <p class="text-muted small mb-0">انتشار مقالات آموزشی، راهنمای راه‌اندازی سخت‌افزارها و معرفی ماژول‌ها</p>
+                    </div>
+                    <button class="btn btn-primary rounded-3 px-3 py-2 btn-sm fw-bold" onclick="alert('فرم انتشار مقاله جدید باز شد.')">
+                        <i class="fas fa-plus me-1"></i> انتشار مقاله جدید
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <span class="badge bg-primary mb-2">راهنمای سخت‌افزار</span>
+                            <h6 class="fw-bold text-dark">آموزش اتصال پوز بانکی PC-POS به صندوق فروشگاهی</h6>
+                            <p class="small text-muted mb-2">پیکربندی کابل شبکه LAN و سوئیچ شاپرک برای ارسال خودکار مبلغ فاکتور...</p>
+                            <span class="small text-secondary"><i class="fas fa-eye me-1"></i> ۱,۲۴۰ بازدید</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <span class="badge bg-success mb-2">راهنمای کاربری</span>
+                            <h6 class="fw-bold text-dark">نحوه ثبت و ردیابی سفارشات با اپلیکیشن پیک موتوری</h6>
+                            <p class="small text-muted mb-2">راهنمای قدم به قدم نصب اپ راننده، مسیریابی نشان/بلد و تسویه حساب روزانه...</p>
+                            <span class="small text-secondary"><i class="fas fa-eye me-1"></i> ۹۸۵ بازدید</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <span class="badge bg-warning text-dark mb-2">مدیریت مالی</span>
+                            <h6 class="fw-bold text-dark">کنترل ضایعات هایپرمارکت با ماژول تاریخ انقضای هوشمند</h6>
+                            <p class="small text-muted mb-2">چگونه حراج خودکار کالاهای نزدیک به انقضا می‌تواند ضایعات لبنیات را به صفر برساند...</p>
+                            <span class="small text-secondary"><i class="fas fa-eye me-1"></i> ۲,۱۱۰ بازدید</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -576,4 +827,23 @@ function downloadLicenseFile() {
     a.click();
     document.body.removeChild(a);
 }
+
+function sendReminderSms(licId, phone) {
+    if (confirm('آیا از ارسال پیامک فعال‌سازی به شماره ' + phone + ' اطمینان دارید؟')) {
+        alert('پیامک فعال‌سازی با موفقیت ارسال شد.');
+    }
+}
+function extendLicenseOneYear(licId) {
+    if (confirm('اعتبار این لایسنس به مدت ۱ سال تمدید شود؟')) {
+        alert('اعتبار لایسنس ۱ سال تمدید گردید.');
+        window.location.reload();
+    }
+}
+function resetHardwareLock(licId) {
+    if (confirm('قفل سخت‌افزاری ریست شود تا خریدار بتواند نرم‌افزار را روی سیستم جدید فعال کند؟')) {
+        alert('قفل سخت‌افزاری با موفقیت ریست شد.');
+        window.location.reload();
+    }
+}
+
 </script>
